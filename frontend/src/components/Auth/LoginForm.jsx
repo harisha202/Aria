@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AiraLogo from '../AiraLogo'
 import Button from '../Common/Button'
 import Input from '../Common/Input'
 import { useAuthContext } from '../../context/AuthContext'
@@ -42,6 +43,11 @@ function LoginForm({ navigate }) {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
+      <div className="auth-form-logo">
+        <button className="auth-brand-button" type="button" onClick={() => navigate(ROUTES.WELCOME)} aria-label="Back to welcome">
+          <AiraLogo className="auth-logo-canvas" width={400} height={380} />
+        </button>
+      </div>
       <div className="auth-header">
         <p className="step-label">Welcome back</p>
         <h2>Login to ARIA</h2>

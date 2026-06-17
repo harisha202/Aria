@@ -1,8 +1,6 @@
-import AiraLogo from '../components/AiraLogo'
 import LoginForm from '../components/Auth/LoginForm'
 import Lightfall from '../components/Backgrounds/Lightfall'
 import Card from '../components/Common/Card'
-import { ROUTES } from '../utils/constants'
 
 function Login({ navigate }) {
   return (
@@ -25,9 +23,6 @@ function Login({ navigate }) {
         mouseRadius={1}
       />
       <section className="auth-layout slide-up" aria-labelledby="login-title">
-        <button className="mini-logo" type="button" onClick={() => navigate(ROUTES.WELCOME)} aria-label="Back to welcome">
-          <AiraLogo className="mini-logo-canvas" width={400} height={380} />
-        </button>
         <Card className="auth-card">
           <h1 className="sr-only" id="login-title">Login</h1>
           <LoginForm navigate={navigate} />

@@ -1,0 +1,156 @@
+
+<style>
+body{margin:0}
+.aw{background:#030d1a;border-radius:20px;padding:48px 20px;display:flex;justify-content:center;overflow:hidden}
+canvas#ac{display:block}
+</style>
+<h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">ARIA icon — both sides animated, silence left and voice right</h2>
+<div class="aw"><canvas id="ac" width="400" height="380"></canvas></div>
+<script>
+(function(){
+var cv=document.getElementById('ac'),cx=cv.getContext('2d'),W=400,H=380,t=0;
+
+function draw(){
+  cx.clearRect(0,0,W,H);
+  cx.fillStyle='#030d1a';
+  cx.fillRect(0,0,W,H);
+
+  var CX=200, CY=175;
+
+  // --- outer rotating dot orbit ---
+  cx.save();
+  cx.translate(CX,CY);
+  cx.rotate(t*0.004);
+  for(var d=0;d<40;d++){
+    var ang=d*(Math.PI*2/40);
+    var isDot=d%4===0;
+    cx.beginPath();
+    cx.arc(Math.cos(ang)*105,Math.sin(ang)*105,isDot?2:1,0,Math.PI*2);
+    cx.fillStyle='rgba(33,150,243,'+(isDot?0.22:0.07)+')';
+    cx.fill();
+  }
+  cx.restore();
+
+  // --- half-arc outer ring: both sides glow differently ---
+  // left side (silence) — slow dim pulse
+  var silArcA=0.15+0.12*Math.sin(t*0.02);
+  cx.beginPath();
+  cx.arc(CX,CY,88,Math.PI*0.5,Math.PI*1.5);
+  cx.strokeStyle='rgba(10,60,120,'+silArcA+')';
+  cx.lineWidth=3;
+  cx.stroke();
+  // right side (voice) — faster bright pulse
+  var vocArcA=0.4+0.3*Math.sin(t*0.05);
+  cx.beginPath();
+  cx.arc(CX,CY,88,Math.PI*1.5,Math.PI*0.5);
+  cx.strokeStyle='rgba(56,182,255,'+vocArcA+')';
+  cx.lineWidth=3;
+  cx.stroke();
+
+  // --- particles travelling bottom arc left→right ---
+  for(var p=0;p<8;p++){
+    var pT=((t*0.008+p/8))%1;
+    var pAng=Math.PI+pT*Math.PI;
+    var pr=96;
+    var ppx=CX+Math.cos(pAng)*pr;
+    var ppy=CY+Math.sin(pAng)*pr;
+    var pA=Math.sin(pT*Math.PI)*0.9;
+    cx.beginPath();
+    cx.arc(ppx,ppy,1.8+2*pA,0,Math.PI*2);
+    cx.fillStyle='rgba(56,182,255,'+pA+')';
+    cx.fill();
+  }
+
+  // --- inner circle ---
+  var iGrad=cx.createRadialGradient(CX,CY-10,4,CX,CY,58);
+  iGrad.addColorStop(0,'#0a2540');
+  iGrad.addColorStop(1,'#030d1a');
+  cx.beginPath();
+  cx.arc(CX,CY,58,0,Math.PI*2);
+  cx.fillStyle=iGrad;
+  cx.fill();
+  cx.strokeStyle='rgba(33,150,243,0.4)';
+  cx.lineWidth=1.5;
+  cx.stroke();
+
+  // --- LEFT: silence bars — slow subtle breathing animation ---
+  cx.save();
+  cx.translate(CX,CY);
+  var silBars=7;
+  for(var i=0;i<silBars;i++){
+    var phase=t*0.025+i*0.7;
+    // slow subtle movement, stays small
+    var bH=4+5*Math.abs(Math.sin(phase));
+    var bx=-46+(i*12);
+    var ba=0.15+0.12*Math.abs(Math.sin(phase));
+    cx.beginPath();
+    cx.roundRect(bx,-bH/2,7,bH,3);
+    cx.fillStyle='rgba(20,80,160,'+ba+')';
+    cx.fill();
+  }
+  cx.restore();
+
+  // --- RIGHT: voice bars — fast tall energetic animation ---
+  cx.save();
+  cx.translate(CX,CY);
+  var vocBars=7;
+  for(var i=0;i<vocBars;i++){
+    var phase2=t*0.08+i*0.6;
+    var bH2=10+26*Math.abs(Math.sin(phase2));
+    var bx2=4+(i*12);
+    var ba2=0.4+0.55*(bH2/36);
+    cx.beginPath();
+    cx.roundRect(bx2,-bH2/2,7,bH2,3);
+    cx.fillStyle='rgba(56,182,255,'+ba2+')';
+    cx.fill();
+  }
+  cx.restore();
+
+  // --- centre divider pulse ---
+  var divA=0.4+0.4*Math.sin(t*0.07);
+  cx.beginPath();
+  cx.moveTo(CX,CY-18); cx.lineTo(CX,CY+18);
+  cx.strokeStyle='rgba(56,182,255,'+divA+')';
+  cx.lineWidth=1.5; cx.stroke();
+
+  // --- microphone icon (centered, crisp) ---
+  var mX=CX, mY=CY;
+  cx.beginPath();
+  cx.roundRect(mX-8,mY-19,16,26,8);
+  var mGrd=cx.createLinearGradient(mX-8,mY-19,mX+8,mY+7);
+  mGrd.addColorStop(0,'#1e88e5');
+  mGrd.addColorStop(1,'#0d47a1');
+  cx.fillStyle=mGrd; cx.fill();
+  cx.beginPath();
+  cx.roundRect(mX-5,mY-17,5,13,3);
+  cx.fillStyle='rgba(255,255,255,0.13)'; cx.fill();
+  cx.beginPath();
+  cx.arc(mX,mY+5,14,Math.PI*1.12,Math.PI*1.88);
+  cx.strokeStyle='#38b6ff'; cx.lineWidth=1.8; cx.stroke();
+  cx.beginPath();
+  cx.moveTo(mX,mY+19); cx.lineTo(mX,mY+25);
+  cx.strokeStyle='#38b6ff'; cx.lineWidth=1.8; cx.lineCap='round'; cx.stroke();
+  cx.beginPath();
+  cx.moveTo(mX-9,mY+25); cx.lineTo(mX+9,mY+25);
+  cx.strokeStyle='#38b6ff'; cx.lineWidth=1.8; cx.lineCap='round'; cx.stroke();
+
+  // --- constellation dots ---
+  for(var c=0;c<14;c++){
+    var cA2=c*(Math.PI*2/14)+t*0.003;
+    var cR=148+18*Math.sin(c*1.7);
+    var ccx=CX+Math.cos(cA2)*cR;
+    var ccy=CY+Math.sin(cA2)*cR;
+    var isRight=Math.cos(cA2)>0;
+    var cAlpha=isRight?(0.07+0.1*Math.sin(t*0.04+c)):(0.03+0.03*Math.sin(t*0.018+c));
+    cx.beginPath();
+    cx.arc(ccx,ccy,1.4,0,Math.PI*2);
+    cx.fillStyle='rgba(56,182,255,'+cAlpha+')';
+    cx.fill();
+  }
+
+  t++;
+  requestAnimationFrame(draw);
+}
+draw();
+})();
+</script>

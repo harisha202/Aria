@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import LogoutConfirmation from './pages/LogoutConfirmation'
 import OTPVerification from './pages/OTPVerification'
 import SignUp from './pages/SignUp'
+import VerifyGuest from './pages/guest'
 import Welcome from './pages/Welcome'
 import { useAuthContext } from './context/AuthContext'
 import { ROUTES } from './utils/constants'
@@ -20,14 +21,15 @@ function App() {
     return () => window.removeEventListener('popstate', handleRouteChange)
   }, [])
 
-  const navigate = (path) => {
-    window.history.pushState({}, '', path)
-    setRoute(path)
+  const navigate = (path, options = {}) => {
+    window.history.pushState(options.state ?? {}, '', path)
+    setRoute(getRoute())
   }
 
   if (route === ROUTES.LOGIN) return <Login navigate={navigate} />
   if (route === ROUTES.SIGNUP) return <SignUp navigate={navigate} />
   if (route === ROUTES.OTP) return <OTPVerification navigate={navigate} />
+  if (route === ROUTES.GUEST) return <VerifyGuest navigate={navigate} />
   if (route === ROUTES.LOGOUT) return <LogoutConfirmation navigate={navigate} />
   if (route === ROUTES.CHAT) {
     return (

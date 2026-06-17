@@ -6,6 +6,7 @@ export const ROUTES = {
   LOGIN: '/login',
   SIGNUP: '/signup',
   OTP: '/otp',
+  GUEST: '/guest',
   CHAT: '/chat',
   LOGOUT: '/logout',
 }

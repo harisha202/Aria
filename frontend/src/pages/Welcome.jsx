@@ -41,7 +41,7 @@ function Welcome({ navigate, onGuest }) {
             variant="secondary"
             onClick={() => {
               onGuest?.()
-              navigate(ROUTES.CHAT)
+              navigate(ROUTES.GUEST)
             }}
           />
         </div>

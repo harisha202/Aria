@@ -7,7 +7,9 @@ export const ROUTES = {
   SIGNUP: '/signup',
   OTP: '/otp',
   GUEST: '/guest',
+  DASHBOARD: '/dashboard',
   CHAT: '/chat',
+  SETTINGS: '/settings',
   LOGOUT: '/logout',
 }
 

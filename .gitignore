@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+!frontend/.env.development
+__pycache__/
+*.pyc
+aria.db
+backend/aria.db
+frontend/dist/
+frontend/node_modules/

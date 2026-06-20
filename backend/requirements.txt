@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+email-validator
+anthropic
+google-genai
+google-cloud-speech
+google-cloud-texttospeech
+psycopg[binary]

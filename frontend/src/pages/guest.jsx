@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import AiraLogo from '../components/AiraLogo'
+import FloatingLines from '../components/Backgrounds/FloatingLines'
 import { useAuthContext } from '../context/AuthContext'
 import { ROUTES } from '../utils/constants'
 import { validateEmail, validateName } from '../utils/validators'
@@ -56,6 +57,21 @@ function GuestAccessForm({ navigate }) {
 
   return (
     <main className="guest-page">
+      <div className="guest-background" aria-hidden="true">
+        <FloatingLines
+          enabledWaves={['top', 'middle', 'bottom']}
+          lineCount={8}
+          lineDistance={39.5}
+          bendRadius={8}
+          bendStrength={1.5}
+          interactive
+          parallax
+          animationSpeed={2.3}
+          gradientStart="#06B6D4"
+          gradientMid="#06B6D4"
+          gradientEnd="#10B981"
+        />
+      </div>
       <div className="guest-container">
         <div className="guest-card">
           {/* Header */}
@@ -161,15 +177,35 @@ function GuestAccessForm({ navigate }) {
           padding: 2rem;
           background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          overflow: hidden;
+          isolation: isolate;
+        }
+
+        .guest-background {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background: radial-gradient(circle at 18% 18%, rgba(6, 182, 212, 0.18), transparent 30%),
+            linear-gradient(135deg, #030712 0%, #07111f 48%, #02140f 100%);
+        }
+
+        .guest-background::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, rgba(3, 7, 18, 0.38), rgba(3, 7, 18, 0.08) 48%, rgba(3, 7, 18, 0.32));
+          pointer-events: none;
         }
 
         .guest-container {
           width: 100%;
           max-width: 500px;
+          position: relative;
+          z-index: 1;
         }
 
         .guest-card {
-          background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+          background: linear-gradient(180deg, rgba(26, 26, 46, 0.86) 0%, rgba(22, 33, 62, 0.86) 100%);
           border: 1px solid rgba(6, 182, 212, 0.2);
           border-radius: 16px;
           overflow: hidden;
@@ -345,20 +381,25 @@ function GuestAccessForm({ navigate }) {
         }
 
         .btn-back-link {
-          background: none;
-          border: none;
-          color: rgba(6, 182, 212, 0.8);
+          width: 100%;
+          min-height: 46px;
+          padding: 0.8rem 1rem;
+          background: rgba(6, 182, 212, 0.1);
+          border: 1px solid rgba(6, 182, 212, 0.34);
+          border-radius: 8px;
+          color: white;
           cursor: pointer;
           font-size: 0.95rem;
-          font-weight: 500;
+          font-weight: 700;
           transition: all 0.3s ease;
-          padding: 0;
           text-decoration: none;
+          box-shadow: 0 10px 24px rgba(6, 182, 212, 0.14);
         }
 
         .btn-back-link:hover {
-          color: #06B6D4;
-          text-decoration: underline;
+          border-color: rgba(6, 182, 212, 0.58);
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px rgba(6, 182, 212, 0.2);
         }
 
         /* Responsive Design */
@@ -420,6 +461,7 @@ function GuestAccessForm({ navigate }) {
           .guest-form {
             padding: 1.25rem;
           }
+
         }
       `}</style>
     </main>

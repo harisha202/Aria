@@ -18,7 +18,7 @@ function LoginForm({ navigate }) {
     setErrors((current) => ({ ...current, [name]: '' }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = {}
 
@@ -34,11 +34,14 @@ function LoginForm({ navigate }) {
     if (Object.keys(nextErrors).length > 0) return
 
     setLoading(true)
-    window.setTimeout(() => {
-      login({ email: values.email, name: values.email.split('@')[0], method: 'password' })
-      setLoading(false)
+    try {
+      await login(values.email, values.password)
       navigate(ROUTES.CHAT)
-    }, 450)
+    } catch (err) {
+      setErrors({ form: err.message || 'Unable to login.' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -75,6 +78,7 @@ function LoginForm({ navigate }) {
         required
       />
       <Button text="Login" type="submit" loading={loading} />
+      {errors.form && <p className="form-error">{errors.form}</p>}
       <div className="auth-links">
         <button type="button" onClick={() => navigate(ROUTES.WELCOME)}>
           Back

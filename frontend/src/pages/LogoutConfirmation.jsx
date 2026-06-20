@@ -1,5 +1,6 @@
 import Button from '../components/Common/Button'
 import Card from '../components/Common/Card'
+import SettingsLogo from '../components/Settings/SettingsLogo'
 import { useAuthContext } from '../context/AuthContext'
 import { ROUTES } from '../utils/constants'
 
@@ -9,6 +10,10 @@ function LogoutConfirmation({ navigate }) {
     <main className="page modal-page">
       <div className="modal-overlay" />
       <Card className="logout-card slide-up">
+        <div className="logout-brand">
+          <SettingsLogo type="logout" size="xl" />
+          <span>ARIA Session</span>
+        </div>
         <h1>Logout?</h1>
         <p>Are you sure you want to logout?</p>
         <div className="modal-actions">

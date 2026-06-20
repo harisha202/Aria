@@ -29,7 +29,7 @@ function SignUpForm({ navigate }) {
     setErrors((current) => ({ ...current, [name]: '' }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = {}
 
@@ -40,8 +40,12 @@ function SignUpForm({ navigate }) {
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) {
-      signup({ name: values.name, email: values.email, method: 'signup-pending-otp' })
-      navigate(ROUTES.OTP)
+      try {
+        await signup({ name: values.name, email: values.email, password: values.password })
+        navigate(ROUTES.OTP)
+      } catch (err) {
+        setErrors({ form: err.message || 'Unable to create account.' })
+      }
     }
   }
 
@@ -65,6 +69,7 @@ function SignUpForm({ navigate }) {
       </div>
       <Input label="Confirm Password" type="password" name="confirmPassword" value={values.confirmPassword} onChange={updateField} error={errors.confirmPassword} placeholder="Confirm password" autoComplete="new-password" required />
       <Button text="Sign Up" type="submit" />
+      {errors.form && <p className="form-error">{errors.form}</p>}
       <div className="auth-links">
         <button type="button" onClick={() => navigate(ROUTES.LOGIN)}>
           Already have an account?

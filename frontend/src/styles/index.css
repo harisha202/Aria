@@ -2,6 +2,7 @@
 @import './forms.css';
 @import './responsive.css';
 @import './animations.css';
+@import './chat.css';
 
 * {
   margin: 0;

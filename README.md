@@ -46,59 +46,6 @@ Frontend dev URL:
 http://localhost:5173
 ```
 
-## Environment Connection
-
-### Backend
-
-Create or edit `backend/.env`. A safe template is in `backend/.env.example`.
-
-Important variables:
-
-```env
-DEBUG=True
-CORS_ORIGINS=http://localhost:5173
-
-DATABASE_URL=sqlite:///aria.db
-# DATABASE_URL=postgresql://aria_user:aria_password@localhost:5432/aria_db
-
-SECRET_KEY=change-this-secret-in-production
-JWT_SECRET=change-this-secret-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=43200
-
-CLAUDE_API_KEY=
-CLAUDE_MODEL=claude-3-5-sonnet-20241022
-
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.0-flash
-AI_DEFAULT_MODEL=claude
-
-GOOGLE_PROJECT_ID=
-GOOGLE_APPLICATION_CREDENTIALS=
-GOOGLE_CREDENTIALS_FILE=
-GOOGLE_CLOUD_STT_LANGUAGE=en-US
-GOOGLE_CLOUD_TTS_VOICE=en-US-Neural2-C
-
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-FROM_EMAIL=noreply@aria.app
-```
-
-### Frontend
-
-Frontend env lives in `frontend/.env.development`.
-
-```env
-VITE_API_URL=http://localhost:8000
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
-VITE_APP_NAME=ARIA
-VITE_APP_VERSION=1.0.0-dev
-VITE_DEFAULT_AI_MODEL=claude
-```
-
 ## Frontend To Backend Flow
 
 1. User opens `frontend/src/pages/chatpage.jsx`.

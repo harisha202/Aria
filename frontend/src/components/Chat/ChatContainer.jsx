@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useChat } from '../../hooks/useChat'
 import { useChatContext } from '../../context/ChatContext'
 import { useVoice } from '../../hooks/useVoice'
-import ChatService from '../../services/chat.service'
+
 import VoiceService from '../../services/voice.service'
 import MessageList from './MessageList'
 import InputBar from './InputBar'
+import { ChatService } from '../../services/chat.service'
+
+
 
 function ChatContainer({ conversationId }) {
   const { messages, setMessages, isLoading, sendMessage } = useChat({ storageKey: `aira-chat-${conversationId}` })
@@ -50,32 +53,33 @@ function ChatContainer({ conversationId }) {
     }
   }, [conversationId, setMessages])
 
-  const handleSend = useCallback(
-    async (text) => {
-      setError('')
-      try {
-        const aiMessage = await sendMessage(text, async () => {
-          const response = await ChatService.sendMessage(conversationId, text, {
-            model: selectedModel,
-            voice: voiceReplies,
-          })
-          if (voiceReplies && response.audio?.audio_base64) {
-            VoiceService.playAudio(response.audio.audio_base64, response.audio.content_type)
-          }
-          return response.ai_message
+  const handleSend = async (text) => {
+    setError('')
+    try {
+      const aiMessage = await sendMessage(text, async () => {
+        const response = await ChatService.sendMessage(conversationId, text, {
+          model: selectedModel,
+          voice: voiceReplies,
         })
-        await updateConversation(conversationId, {
-          last_message: text,
-          message_count: (currentConversation?.message_count || 0) + 1,
-        })
-        return aiMessage
-      } catch (err) {
-        setError(err.message || 'ARIA could not send that message.')
-        return null
-      }
-    },
-    [conversationId, currentConversation?.message_count, selectedModel, sendMessage, updateConversation, voiceReplies],
-  )
+        if (voiceReplies && response.audio?.audio_base64) {
+          VoiceService.playAudio(response.audio.audio_base64, response.audio.content_type)
+        }
+        return response.ai_message
+      })
+
+      await updateConversation(conversationId, {
+        last_message: text,
+        message_count: (currentConversation?.message_count || 0) + 1,
+      })
+
+      return aiMessage
+    } catch (err) {
+      setError(err.message || 'ARIA could not send that message.')
+      return null
+    }
+  }
+
+
 
   const handleStopVoice = useCallback(async () => {
     setError('')

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import config
 from database.db import init_db
-from routes import ai, auth, chat, verification, voice, websocket
+from routes import ai, auth, chat, feedback, verification, voice, websocket
 
 app = FastAPI(title="ARIA API")
 
@@ -22,6 +22,7 @@ app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(voice.router)
 app.include_router(ai.router)
+app.include_router(feedback.router)
 app.include_router(verification.router)
 app.include_router(websocket.router)
 

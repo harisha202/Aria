@@ -12,7 +12,12 @@ export const AIService = {
   async streamPrompt(text, conversationId, onChunk, model) {
     const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/ai/chat-stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(localStorage.getItem('aria-token')
+          ? { Authorization: `Bearer ${localStorage.getItem('aria-token')}` }
+          : {}),
+      },
       body: JSON.stringify({
         message: text,
         conversation_id: conversationId,

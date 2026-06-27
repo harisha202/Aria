@@ -146,6 +146,12 @@ class ChatService:
         )
         return [_message_from_row(row) for row in rows]
 
+    def get_message(self, message_id: str):
+        mark = placeholder()
+        return _message_from_row(
+            fetch_one(f"SELECT * FROM messages WHERE id = {mark}", (message_id,))
+        )
+
     def delete_message(self, message_id: str):
         mark = placeholder()
         execute(f"DELETE FROM messages WHERE id = {mark}", (message_id,))

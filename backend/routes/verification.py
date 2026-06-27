@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
+from middleware.auth import require_admin_user
 from services.email_verification import email_verification_service
+from services.feedback import feedback_service
 from services.otp_verification import otp_verification_service
 
 router = APIRouter(prefix="/api/verification", tags=["verification"])
@@ -30,8 +33,16 @@ class OTPWarningEmailRequest(BaseModel):
     remaining_attempts: int = Field(..., ge=0)
 
 
+class FeedbackEmailRequest(BaseModel):
+    email: EmailStr
+    user_name: str = Field(..., min_length=1, max_length=120)
+    message: str = Field(..., min_length=3, max_length=4000)
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
+    send_confirmation: bool = True
+
+
 @router.post("/email")
-async def send_verification_email(payload: VerificationEmailRequest):
+async def send_verification_email(payload: VerificationEmailRequest, admin=Depends(require_admin_user)):
     sent = await email_verification_service.send_verification_email(
         payload.email,
         payload.user_name,
@@ -46,7 +57,7 @@ async def send_verification_email(payload: VerificationEmailRequest):
 
 
 @router.post("/email/confirmed")
-async def send_verified_confirmation(payload: VerifiedConfirmationRequest):
+async def send_verified_confirmation(payload: VerifiedConfirmationRequest, admin=Depends(require_admin_user)):
     sent = await email_verification_service.send_verified_confirmation(
         payload.email,
         payload.user_name,
@@ -60,7 +71,7 @@ async def send_verified_confirmation(payload: VerifiedConfirmationRequest):
 
 
 @router.post("/otp")
-async def send_otp_email(payload: OTPEmailRequest):
+async def send_otp_email(payload: OTPEmailRequest, admin=Depends(require_admin_user)):
     sent = await otp_verification_service.send_otp_email(
         payload.email,
         payload.user_name,
@@ -75,7 +86,7 @@ async def send_otp_email(payload: OTPEmailRequest):
 
 
 @router.post("/otp/warning")
-async def send_otp_warning_email(payload: OTPWarningEmailRequest):
+async def send_otp_warning_email(payload: OTPWarningEmailRequest, admin=Depends(require_admin_user)):
     sent = await otp_verification_service.send_otp_warning_email(
         payload.email,
         payload.user_name,
@@ -85,5 +96,23 @@ async def send_otp_warning_email(payload: OTPWarningEmailRequest):
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Failed to send OTP warning email",
+        )
+    return {"sent": True}
+
+
+@router.post("/feedback")
+async def send_feedback_email(payload: FeedbackEmailRequest, admin=Depends(require_admin_user)):
+    sent = await feedback_service.send_feedback(
+        payload.user_name,
+        payload.email,
+        payload.message,
+        "general",
+        payload.rating,
+        payload.send_confirmation,
+    )
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to send feedback email",
         )
     return {"sent": True}

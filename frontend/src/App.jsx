@@ -18,7 +18,7 @@ import './App.css'
 const getRoute = () => window.location.pathname
 
 function AppRoutes() {
-  const { user, logout } = useAuthContext()
+  const { user, isAuthenticated, logout } = useAuthContext()
   const [route, setRoute] = useState(getRoute)
 
   useEffect(() => {
@@ -33,6 +33,11 @@ function AppRoutes() {
   }
 
   const pageProps = { navigate, user }
+  const protectedRoutes = [ROUTES.CHAT, ROUTES.DASHBOARD, ROUTES.SETTINGS, ROUTES.LOGOUT]
+
+  if (protectedRoutes.includes(route) && !isAuthenticated) {
+    return <Login navigate={navigate} />
+  }
 
   if (route === ROUTES.LOGIN) return <Login navigate={navigate} />
   if (route === ROUTES.SIGNUP) return <SignUp navigate={navigate} />

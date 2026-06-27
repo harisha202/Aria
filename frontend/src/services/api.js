@@ -15,7 +15,14 @@ export const api = {
     })
 
     if (!response.ok) {
-      throw new Error(`Request failed with status ${response.status}`)
+      let message = `Request failed with status ${response.status}`
+      try {
+        const data = await response.json()
+        message = data.detail || data.message || message
+      } catch {
+        // Keep the status message when the response body is not JSON.
+      }
+      throw new Error(message)
     }
 
     return response.json()

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 try:
     from dotenv import load_dotenv
@@ -6,7 +7,7 @@ except ImportError:
     load_dotenv = None
 
 if load_dotenv:
-    load_dotenv()
+    load_dotenv(Path(__file__).with_name(".env"))
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///aria.db")
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
@@ -38,7 +39,13 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER or "noreply@aria.app")
+FEEDBACK_EMAIL = os.getenv("FEEDBACK_EMAIL", FROM_EMAIL)
 
 APP_URL = os.getenv("APP_URL", "http://localhost:5173")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+ADMIN_EMAILS = [
+    email.strip().lower()
+    for email in os.getenv("ADMIN_EMAILS", "").split(",")
+    if email.strip()
+]

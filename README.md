@@ -1,18 +1,182 @@
 # ARIA
 
-ARIA is a full-stack voice-first AI assistant. The frontend is a React/Vite app, and the backend is a FastAPI API that connects chat, auth, AI providers, speech-to-text, text-to-speech, WebSocket routes, and database persistence.
+ARIA is a full-stack, voice-first AI assistant.
 
 Tagline: **Where Silence Finds Its Voice**
+
+The frontend is a React/Vite app. The backend is a FastAPI API that connects authentication, chat history, AI providers, speech-to-text, text-to-speech, WebSocket streaming, and database persistence.
 
 ## Current Status
 
 - Frontend and backend are connected through `VITE_API_URL=http://localhost:8000`.
 - Backend routes use `/api/v1/...`.
 - Chat messages are sent from React to FastAPI and stored in the database.
-- Voice recording sends audio from the browser to the backend STT endpoint.
+- Voice recording sends browser audio to the backend STT endpoint.
+- Signup and resend flows send branded ARIA OTP emails through the backend mail service.
 - AI responses use Claude/Gemini when keys are configured, otherwise the app uses a local fallback response.
 - TTS uses Google Cloud Text-to-Speech when configured, otherwise it returns a local fallback audio payload.
 - SQLite works by default. PostgreSQL is supported through `DATABASE_URL`.
+
+## System Architecture
+
+```text
+ARIA Voice Assistant
+"Where Silence Finds Its Voice"
+
+Frontend: React + Vite
+|
+|-- Pages
+|   |-- Welcome
+|   |-- Login / Sign Up / OTP Verification
+|   `-- ChatPage
+|
+|-- Chat UI
+|   |-- ChatContainer
+|   |-- MessageList
+|   |-- MessageItem
+|   |-- InputBar
+|   |-- VoiceButton
+|   `-- VoiceVisualizer
+|
+|-- Context Providers
+|   |-- AuthContext
+|   |-- ChatContext
+|   |-- VoiceContext
+|   `-- UIContext
+|
+|-- Hooks
+|   |-- useAuth
+|   |-- useChat
+|   |-- useVoice
+|   |-- useWebSocket
+|   |-- useLocalStorage
+|   `-- usePrevious
+|
+`-- Services
+    |-- api.js
+    |-- auth.service.js
+    |-- chat.service.js
+    |-- ai.service.js
+    |-- voice.service.js
+    `-- websocket.service.js
+
+        HTTP, multipart audio uploads, and WebSocket streaming
+
+Backend: FastAPI + Python
+|
+|-- API Routes
+|   |-- /api/v1/auth
+|   |-- /api/v1/chat
+|   |-- /api/v1/ai
+|   |-- /api/v1/voice
+|   `-- /ws/{user_id}/{conversation_id}
+|
+|-- Services
+|   |-- auth.py
+|   |-- chat.py
+|   |-- ai.py
+|   |-- voice.py
+|   |-- websocket.py
+|   |-- ai_providers/
+|   |   |-- claude_service.py
+|   |   `-- gemini_service.py
+|   `-- voice_engines/
+|       |-- stt_service.py
+|       `-- tts_service.py
+|
+|-- Models
+|   |-- User
+|   |-- Conversation
+|   |-- Message
+|   `-- Settings
+|
+`-- Database
+    |-- SQLite by default
+    `-- PostgreSQL through DATABASE_URL
+
+External APIs
+|
+|-- Anthropic Claude API
+|-- Google Gemini API
+|-- Google Cloud Speech-to-Text
+|-- Google Cloud Text-to-Speech
+`-- SMTP email for OTP delivery
+```
+
+## Main User Journey
+
+```text
+User speaks
+|
+v
+Frontend records audio with the Web Audio API
+|
+v
+VoiceVisualizer shows the live waveform
+|
+v
+Frontend sends audio blob as multipart/form-data
+POST /api/v1/voice/transcribe
+|
+v
+Backend calls the STT engine
+|
+v
+Transcript returns to the frontend
+|
+v
+Transcript is sent as a chat message
+POST /api/v1/chat/send-message
+|
+v
+Backend stores the user message
+|
+v
+Backend routes the prompt through services/ai.py
+|
+v
+Claude or Gemini generates the assistant response
+|
+v
+Backend stores the AI message
+|
+v
+Backend optionally synthesizes speech
+POST /api/v1/voice/speak or /api/v1/voice/synthesize
+|
+v
+Frontend renders text plus replayable audio controls
+```
+
+## Key Integration Points
+
+### Frontend To Backend
+
+- REST API: auth, conversations, messages, settings, AI, and voice actions.
+- Multipart forms: audio upload for speech-to-text.
+- Binary responses: generated audio for text-to-speech.
+- WebSocket: real-time chat updates, streaming responses, and typing-style events.
+
+### AI
+
+- Claude is the primary reasoning model when `CLAUDE_API_KEY` is configured.
+- Gemini is available as an alternate or fallback model when `GEMINI_API_KEY` is configured.
+- `backend/services/ai.py` orchestrates provider selection and fallback behavior.
+- Provider implementations live in `backend/services/ai_providers/`.
+
+### Voice
+
+- Browser recording and playback are handled by `frontend/src/services/voice.service.js`.
+- Speech-to-text is routed through `backend/services/voice_engines/stt_service.py`.
+- Text-to-speech is routed through `backend/services/voice_engines/tts_service.py`.
+- The UI displays live recording state and audio playback controls.
+
+### State And Persistence
+
+- Frontend state lives in React contexts: auth, chat, voice, and UI.
+- Backend persistence stores users, conversations, messages, and settings.
+- SQLite is the default local database.
+- PostgreSQL is supported for production-like deployments.
 
 ## Run The App
 
@@ -84,6 +248,7 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASSWORD=
 FROM_EMAIL=noreply@aria.app
+FEEDBACK_EMAIL=feedback@aria.app
 ```
 
 ### Frontend
@@ -99,18 +264,6 @@ VITE_APP_VERSION=1.0.0-dev
 VITE_DEFAULT_AI_MODEL=claude
 ```
 
-## Frontend To Backend Flow
-
-1. User opens `frontend/src/pages/chatpage.jsx`.
-2. `ChatContainer.jsx` loads messages using `ChatService`.
-3. Text input calls `POST /api/v1/chat/send-message`.
-4. Voice input records audio in `voice.service.js`, sends it to `POST /api/v1/voice/transcribe`, then sends the transcript to chat.
-5. Backend saves the user message in `services/chat.py`.
-6. Backend calls `services/ai.py`, which routes to Claude or Gemini if keys exist.
-7. Backend saves the AI response.
-8. Backend optionally calls TTS through `services/voice.py`.
-9. Frontend receives text/audio and renders it in `MessageItem.jsx`.
-
 ## API Endpoints
 
 ### Auth
@@ -121,6 +274,8 @@ POST /api/v1/auth/login
 POST /api/v1/auth/verify-otp
 POST /api/v1/auth/resend-otp
 ```
+
+`signup` creates a 6-digit OTP and sends it by email. `verify-otp` validates the code and marks the user email as verified.
 
 ### Chat
 
@@ -165,6 +320,29 @@ WS /ws/{user_id}/{conversation_id}
 WS /ws/chat/{conversation_id}
 ```
 
+### Verification And Mail
+
+```text
+POST /api/verification/email
+POST /api/verification/email/confirmed
+POST /api/verification/otp
+POST /api/verification/otp/warning
+POST /api/verification/feedback
+```
+
+### Feedback
+
+```text
+POST   /api/v1/feedback/submit
+GET    /api/v1/feedback/
+GET    /api/v1/feedback/stats/summary
+GET    /api/v1/feedback/user/{email}
+GET    /api/v1/feedback/{feedback_id}
+PATCH  /api/v1/feedback/{feedback_id}/read
+POST   /api/v1/feedback/{feedback_id}/note
+DELETE /api/v1/feedback/{feedback_id}
+```
+
 ## Database
 
 Default local mode:
@@ -187,6 +365,135 @@ Main tables:
 - `conversations`
 - `messages`
 - `user_settings`
+- `feedback`
+
+Useful PostgreSQL checks:
+
+```sql
+SELECT id, user_email, rating, feedback_type, is_read, created_at
+FROM feedback
+ORDER BY created_at DESC;
+
+SELECT feedback_type, COUNT(*) AS total, AVG(rating) AS average_rating
+FROM feedback
+GROUP BY feedback_type
+ORDER BY feedback_type;
+```
+
+## File Structure
+
+Generated folders such as `node_modules/`, `dist/`, `__pycache__/`, and local database files are intentionally omitted.
+
+```text
+Aira/
+|-- .gitignore
+|-- README.md
+|-- backend/
+|   |-- .env.example
+|   |-- config.py
+|   |-- main.py
+|   |-- requirements.txt
+|   |-- database/
+|   |   |-- db.py
+|   |   `-- schemas.py
+|   |-- middleware/
+|   |-- models/
+|   |   |-- conversation.py
+|   |   |-- message.py
+|   |   |-- settings.py
+|   |   `-- user.py
+|   |-- routes/
+|   |   |-- ai.py
+|   |   |-- auth.py
+|   |   |-- chat.py
+|   |   |-- user.py
+|   |   |-- verification.py
+|   |   |-- voice.py
+|   |   `-- websocket.py
+|   |-- services/
+|   |   |-- ai.py
+|   |   |-- auth.py
+|   |   |-- chat.py
+|   |   |-- email_verification.py
+|   |   |-- otp_verification.py
+|   |   |-- voice.py
+|   |   |-- websocket.py
+|   |   |-- ai_providers/
+|   |   |   |-- claude_service.py
+|   |   |   `-- gemini_service.py
+|   |   `-- voice_engines/
+|   |       |-- stt_service.py
+|   |       `-- tts_service.py
+|   `-- utils/
+|       |-- ai_utils.py
+|       |-- helpers.py
+|       |-- jwt.py
+|       |-- validators.py
+|       `-- voice_utils.py
+|-- database/
+|   `-- migrations/
+`-- frontend/
+    |-- .env.development
+    |-- .env.example
+    |-- package.json
+    |-- vite.config.js
+    |-- public/
+    `-- src/
+        |-- App.jsx
+        |-- main.jsx
+        |-- components/
+        |   |-- Auth/
+        |   |-- Backgrounds/
+        |   |-- Chat/
+        |   |-- Common/
+        |   |-- Dashboard/
+        |   `-- Settings/
+        |-- context/
+        |   |-- AuthContext.jsx
+        |   |-- ChatContext.jsx
+        |   |-- UIContext.jsx
+        |   `-- VoiceContext.jsx
+        |-- hooks/
+        |-- pages/
+        |   |-- Login.jsx
+        |   |-- OTPVerification.jsx
+        |   |-- SignUp.jsx
+        |   |-- Welcome.jsx
+        |   |-- chatpage.jsx
+        |   |-- dashboard.jsx
+        |   |-- guest.jsx
+        |   `-- settings.jsx
+        |-- services/
+        `-- utils/
+```
+
+## Key Files
+
+- `backend/main.py`: FastAPI app, CORS, route registration, and database initialization.
+- `backend/config.py`: Reads `.env` values for API keys, database, SMTP, JWT, and CORS.
+- `backend/database/db.py`: SQLite/PostgreSQL connection helper and table initialization.
+- `backend/routes/chat.py`: Conversation/message endpoints and full message workflow.
+- `backend/routes/ai.py`: AI endpoints for chat, streaming, model listing, and model switching.
+- `backend/routes/voice.py`: STT/TTS endpoints.
+- `backend/routes/verification.py`: Verification, OTP, and feedback email endpoints.
+- `backend/services/chat.py`: Conversation and message persistence.
+- `backend/services/ai.py`: Claude/Gemini orchestration with fallback behavior.
+- `backend/services/voice.py`: STT/TTS orchestration.
+- `backend/services/mailer.py`: Shared SMTP sender and ARIA-branded email shell with inline logo.
+- `backend/services/email_verification.py`: Verification and welcome email templates.
+- `backend/services/otp_verification.py`: OTP and OTP warning email templates.
+- `backend/services/otp_store.py`: Local OTP generation, expiry, and verification state.
+- `backend/services/feedback.py`: Feedback notification and confirmation email templates.
+- `frontend/src/pages/chatpage.jsx`: Main chat page.
+- `frontend/src/components/Chat/ChatContainer.jsx`: Main connected chat experience.
+- `frontend/src/components/Chat/VoiceButton.jsx`: Recording control.
+- `frontend/src/components/Chat/VoiceVisualizer.jsx`: Recording visualization.
+- `frontend/src/services/api.js`: Base HTTP client using `VITE_API_URL`.
+- `frontend/src/services/chat.service.js`: Frontend chat API client.
+- `frontend/src/services/voice.service.js`: Browser recording, STT upload, and TTS playback.
+- `frontend/src/context/AuthContext.jsx`: User/token state.
+- `frontend/src/context/ChatContext.jsx`: Conversation state.
+- `frontend/src/context/VoiceContext.jsx`: Voice state.
 
 ## Verification
 
@@ -204,213 +511,20 @@ cd frontend
 npm.cmd run -s build
 ```
 
-## Complete File Structure
+## Summary
 
-Generated folders such as `node_modules/`, `dist/`, `__pycache__/`, and local database files are intentionally omitted.
+ARIA supports:
+
+- Voice input through speech-to-text.
+- Voice output through text-to-speech.
+- AI responses through Claude and Gemini provider services.
+- Real-time chat behavior through WebSocket routes.
+- Persistent conversation history.
+- JWT and OTP-based authentication.
+- A responsive React interface with chat, voice, dashboard, and settings surfaces.
+
+Core loop:
 
 ```text
-Aira/
-|-- .gitignore
-|-- README.md
-|-- backend/
-|   |-- .env.example
-|   |-- config.py
-|   |-- main.py
-|   |-- requirements.txt
-|   |-- database/
-|   |   |-- db.py
-|   |   `-- schemas.py
-|   |-- middleware/
-|   |   |-- __init__.py
-|   |   |-- auth.py
-|   |   |-- error_handler.py
-|   |   `-- websocket.py
-|   |-- models/
-|   |   |-- __init__.py
-|   |   |-- conversation.py
-|   |   |-- message.py
-|   |   |-- settings.py
-|   |   `-- user.py
-|   |-- routes/
-|   |   |-- __init__.py
-|   |   |-- ai.py
-|   |   |-- auth.py
-|   |   |-- chat.py
-|   |   |-- user.py
-|   |   |-- verification.py
-|   |   |-- voice.py
-|   |   `-- websocket.py
-|   |-- services/
-|   |   |-- __init__.py
-|   |   |-- ai.py
-|   |   |-- auth.py
-|   |   |-- chat.py
-|   |   |-- email_verification.py
-|   |   |-- otp_verification.py
-|   |   |-- voice.py
-|   |   |-- websocket.py
-|   |   |-- ai_providers/
-|   |   |   |-- __init__.py
-|   |   |   |-- claude_service.py
-|   |   |   `-- gemini_service.py
-|   |   `-- voice_engines/
-|   |       |-- __init__.py
-|   |       |-- stt_service.py
-|   |       `-- tts_service.py
-|   `-- utils/
-|       |-- __init__.py
-|       |-- ai_utils.py
-|       |-- helpers.py
-|       |-- jwt.py
-|       |-- validators.py
-|       `-- voice_utils.py
-|-- database/
-|   `-- migrations/
-|       |-- 001_create_users.sql
-|       |-- 002_create_conversations.sql
-|       |-- 003_create_messages.sql
-|       `-- 004_create_settings.sql
-`-- frontend/
-    |-- .env.development
-    |-- .env.example
-    |-- README.md
-    |-- eslint.config.js
-    |-- index.html
-    |-- package-lock.json
-    |-- package.json
-    |-- postcss.config.js
-    |-- tailwind.config.js
-    |-- vite.config.js
-    |-- public/
-    |   |-- favicon.svg
-    |   |-- icons.svg
-    |   |-- index.html
-    |   `-- assets/
-    |       `-- aria_icon_both_animated.html
-    `-- src/
-        |-- App.css
-        |-- App.jsx
-        |-- index.css
-        |-- main.jsx
-        |-- assets/
-        |   |-- hero.png
-        |   |-- react.svg
-        |   `-- vite.svg
-        |-- components/
-        |   |-- AiraLogo.jsx
-        |   |-- Auth/
-        |   |   |-- LoginForm.jsx
-        |   |   |-- OTPForm.jsx
-        |   |   `-- SignUpForm.jsx
-        |   |-- Backgrounds/
-        |   |   |-- Ballpit.css
-        |   |   |-- Ballpit.jsx
-        |   |   |-- ElectricBorder.jsx
-        |   |   |-- EvilEye.jsx
-        |   |   |-- FloatingLines.css
-        |   |   |-- FloatingLines.jsx
-        |   |   |-- Hyperspeed.css
-        |   |   |-- Hyperspeed.jsx
-        |   |   |-- Iridescence.css
-        |   |   |-- Iridescence.jsx
-        |   |   |-- Lightfall.css
-        |   |   |-- Lightfall.jsx
-        |   |   |-- LiquidChrome.jsx
-        |   |   |-- PixelSnow.css
-        |   |   |-- PixelSnow.jsx
-        |   |   |-- PrismaticBurst.css
-        |   |   |-- PrismaticBurst.jsx
-        |   |   |-- SoftAurora.css
-        |   |   `-- SoftAurora.jsx
-        |   |-- Chat/
-        |   |   |-- ChatContainer.jsx
-        |   |   |-- ConversationItem.jsx
-        |   |   |-- ConversationList.jsx
-        |   |   |-- InputBar.jsx
-        |   |   |-- MessageItem.jsx
-        |   |   |-- MessageList.jsx
-        |   |   |-- VoiceButton.jsx
-        |   |   `-- VoiceVisualizer.jsx
-        |   |-- Common/
-        |   |   |-- Button.jsx
-        |   |   |-- Card.jsx
-        |   |   |-- Input.jsx
-        |   |   |-- Loading.jsx
-        |   |   |-- Navbar.jsx
-        |   |   |-- Sidebar.jsx
-        |   |   `-- Toast.jsx
-        |   |-- Dashboard/
-        |   |   |-- QuickActions.jsx
-        |   |   |-- RecentChats.jsx
-        |   |   |-- StatCard.jsx
-        |   |   `-- UsageChart.jsx
-        |   `-- Settings/
-        |       |-- NotificationSettings.jsx
-        |       |-- PrivacySettings.jsx
-        |       |-- ProfileSettings.jsx
-        |       |-- SettingsLogo.jsx
-        |       `-- VoiceSettings.jsx
-        |-- context/
-        |   |-- AuthContext.jsx
-        |   |-- ChatContext.jsx
-        |   |-- UIContext.jsx
-        |   `-- VoiceContext.jsx
-        |-- hooks/
-        |   |-- useAI.js
-        |   |-- useAuth.js
-        |   |-- useChat.js
-        |   |-- useLocalStorage.js
-        |   |-- usePrevious.js
-        |   |-- useVoice.js
-        |   `-- useWebSocket.js
-        |-- pages/
-        |   |-- Login.jsx
-        |   |-- LogoutConfirmation.jsx
-        |   |-- OTPVerification.jsx
-        |   |-- SignUp.jsx
-        |   |-- Welcome.jsx
-        |   |-- chatpage.jsx
-        |   |-- dashboard.jsx
-        |   |-- guest.jsx
-        |   `-- settings.jsx
-        |-- services/
-        |   |-- ai.service.js
-        |   |-- api.js
-        |   |-- auth.service.js
-        |   |-- chat.service.js
-        |   |-- notification.service.js
-        |   |-- storage.service.js
-        |   |-- voice.service.js
-        |   `-- websocket.service.js
-        |-- styles/
-        |   |-- animations.css
-        |   |-- chat.css
-        |   |-- forms.css
-        |   |-- index.css
-        |   |-- responsive.css
-        |   `-- variables.css
-        `-- utils/
-            |-- constants.js
-            |-- error-handler.js
-            |-- formatters.js
-            |-- storage-utils.js
-            |-- validators.js
-            `-- voice-utils.js
+Speak -> Transcribe -> Send to AI -> Stream response -> Synthesize voice -> Save history
 ```
-
-## Key Files
-
-- `backend/main.py`: FastAPI app, CORS, route registration, database initialization.
-- `backend/config.py`: Reads `.env` values for API keys, database, SMTP, JWT, and CORS.
-- `backend/database/db.py`: SQLite/PostgreSQL connection helper and table initialization.
-- `backend/routes/chat.py`: Conversation/message endpoints and full message workflow.
-- `backend/services/chat.py`: Persistence for conversations and messages.
-- `backend/services/ai.py`: Claude/Gemini orchestration with fallback.
-- `backend/services/voice.py`: STT/TTS orchestration.
-- `frontend/src/services/api.js`: Base HTTP client using `VITE_API_URL`.
-- `frontend/src/services/chat.service.js`: Frontend chat API client.
-- `frontend/src/services/voice.service.js`: Browser recording, STT upload, TTS playback.
-- `frontend/src/components/Chat/ChatContainer.jsx`: Main connected chat experience.
-- `frontend/src/context/AuthContext.jsx`: User/token state.
-- `frontend/src/context/ChatContext.jsx`: Conversation state.
-- `frontend/src/context/VoiceContext.jsx`: Voice state.

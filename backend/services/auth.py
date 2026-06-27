@@ -38,7 +38,7 @@ def signup(email: str, password: str, name: str = None):
         "email": email.lower(),
         "name": name or email.split("@")[0],
         "hashed_password": _hash_password(password),
-        "is_verified": True,
+        "is_verified": False,
         "created_at": now,
         "updated_at": now,
     }
@@ -57,7 +57,7 @@ def signup(email: str, password: str, name: str = None):
             user["updated_at"],
         ),
     )
-    return {"user": public_user(user), "access_token": create_token({"sub": user["id"], "email": user["email"]})}
+    return {"user": public_user(user)}
 
 
 def login(email: str, password: str):
@@ -65,6 +65,8 @@ def login(email: str, password: str):
     user = fetch_one(f"SELECT * FROM users WHERE email = {mark}", (email.lower(),))
     if not user or not _verify_password(password, user["hashed_password"]):
         raise ValueError("Invalid email or password")
+    if not user.get("is_verified"):
+        raise ValueError("Email is not verified")
     return {"user": public_user(user), "access_token": create_token({"sub": user["id"], "email": user["email"]})}
 
 
@@ -73,3 +75,22 @@ def verify_user(user_id: str) -> bool:
         return False
     mark = placeholder()
     return bool(fetch_one(f"SELECT id FROM users WHERE id = {mark}", (user_id,)))
+
+
+def mark_email_verified(email: str) -> bool:
+    mark = placeholder()
+    execute(
+        f"UPDATE users SET is_verified = {mark}, updated_at = {mark} WHERE email = {mark}",
+        (True, now_iso(), email.lower()),
+    )
+    return bool(fetch_one(f"SELECT id FROM users WHERE email = {mark} AND is_verified = {mark}", (email.lower(), True)))
+
+
+def get_user_by_email(email: str):
+    mark = placeholder()
+    return fetch_one(f"SELECT * FROM users WHERE email = {mark}", (email.lower(),))
+
+
+def get_user_by_id(user_id: str):
+    mark = placeholder()
+    return fetch_one(f"SELECT * FROM users WHERE id = {mark}", (user_id,))

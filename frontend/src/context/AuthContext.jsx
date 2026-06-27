@@ -11,7 +11,23 @@ export const AuthProvider = ({ children }) => {
   })
   const [token, setToken] = useState(() => localStorage.getItem('aria-token') || '')
   const [isLoading, setIsLoading] = useState(false)
-  const isAuthenticated = Boolean(user)
+  const isAuthenticated = Boolean(user && (token || user.method === 'guest'))
+
+  const persistAuth = (result) => {
+    const nextUser = result.user || result
+    setUser(nextUser)
+    localStorage.setItem('aria-user', JSON.stringify(nextUser))
+
+    if (result.access_token) {
+      setToken(result.access_token)
+      localStorage.setItem('aria-token', result.access_token)
+    } else {
+      setToken('')
+      localStorage.removeItem('aria-token')
+    }
+
+    return result
+  }
 
   const login = async (emailOrUser, password) => {
     setIsLoading(true)
@@ -19,15 +35,10 @@ export const AuthProvider = ({ children }) => {
       const result =
         typeof emailOrUser === 'string'
           ? await AuthService.login(emailOrUser, password)
-          : { user: emailOrUser, access_token: token }
-      const nextUser = result.user || result
-      setUser(nextUser)
-      localStorage.setItem('aria-user', JSON.stringify(nextUser))
-      if (result.access_token) {
-        setToken(result.access_token)
-        localStorage.setItem('aria-token', result.access_token)
-      }
-      return result
+          : emailOrUser?.user || emailOrUser?.access_token
+            ? emailOrUser
+            : { user: emailOrUser }
+      return persistAuth(result)
     } finally {
       setIsLoading(false)
     }
@@ -38,15 +49,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = userData.password
         ? await AuthService.signup(userData)
-        : { user: userData, access_token: token }
-      const nextUser = result.user || result
-      setUser(nextUser)
-      localStorage.setItem('aria-user', JSON.stringify(nextUser))
-      if (result.access_token) {
-        setToken(result.access_token)
-        localStorage.setItem('aria-token', result.access_token)
-      }
-      return result
+        : { user: userData }
+      return persistAuth(result)
     } finally {
       setIsLoading(false)
     }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Button from '../Common/Button'
 import { useAuthContext } from '../../context/AuthContext'
+import AuthService from '../../services/auth.service'
 import { OTP_LENGTH, OTP_RESEND_TIME, ROUTES } from '../../utils/constants'
 import { validateOTP } from '../../utils/validators'
 
@@ -10,6 +11,8 @@ function OTPForm({ email = 'email@example.com', navigate }) {
   const [digits, setDigits] = useState(Array.from({ length: OTP_LENGTH }, () => ''))
   const [timer, setTimer] = useState(OTP_RESEND_TIME)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const inputsRef = useRef([])
 
   useEffect(() => {
@@ -37,21 +40,48 @@ function OTPForm({ email = 'email@example.com', navigate }) {
     }
   }
 
-  const handleVerify = (event) => {
+  const handleVerify = async (event) => {
     event.preventDefault()
     const otp = digits.join('')
     if (!validateOTP(otp)) {
       setError('Enter the 6-digit code sent to your email.')
       return
     }
-    login({ ...user, email: displayEmail, method: 'otp', verified: true })
-    navigate(ROUTES.CHAT)
+
+    setLoading(true)
+    try {
+      const result = await AuthService.verifyOtp(displayEmail, otp)
+      await login({
+        user: {
+          ...(result.user || user),
+          email: displayEmail,
+          method: 'otp',
+          verified: true,
+          is_verified: true,
+        },
+        access_token: result.access_token,
+      })
+      navigate(ROUTES.CHAT)
+    } catch (err) {
+      setError(err.message || 'Invalid or expired OTP.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const resend = () => {
-    setTimer(OTP_RESEND_TIME)
-    setDigits(Array.from({ length: OTP_LENGTH }, () => ''))
-    inputsRef.current[0]?.focus()
+  const resend = async () => {
+    setResending(true)
+    setError('')
+    try {
+      await AuthService.resendOtp(displayEmail)
+      setTimer(OTP_RESEND_TIME)
+      setDigits(Array.from({ length: OTP_LENGTH }, () => ''))
+      inputsRef.current[0]?.focus()
+    } catch (err) {
+      setError(err.message || 'Unable to resend OTP.')
+    } finally {
+      setResending(false)
+    }
   }
 
   return (
@@ -78,9 +108,9 @@ function OTPForm({ email = 'email@example.com', navigate }) {
         ))}
       </div>
       {error && <span className="error-message otp-error">{error}</span>}
-      <Button text="Verify" type="submit" />
-      <button className="resend-btn" type="button" onClick={resend} disabled={timer > 0}>
-        {timer > 0 ? `Resend OTP in ${timer}s` : 'Resend OTP'}
+      <Button text="Verify" type="submit" loading={loading} />
+      <button className="resend-btn" type="button" onClick={resend} disabled={timer > 0 || resending}>
+        {resending ? 'Sending...' : timer > 0 ? `Resend OTP in ${timer}s` : 'Resend OTP'}
       </button>
     </form>
   )

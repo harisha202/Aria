@@ -121,6 +121,20 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS feedback (
+            id TEXT PRIMARY KEY,
+            user_email TEXT NOT NULL,
+            user_name TEXT,
+            rating INTEGER NOT NULL,
+            feedback_type TEXT NOT NULL,
+            message TEXT NOT NULL,
+            is_read BOOLEAN DEFAULT 0,
+            admin_note TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """,
     ]
     with get_connection() as connection:
         for statement in statements:

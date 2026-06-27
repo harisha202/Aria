@@ -17,11 +17,21 @@ export const useVoice = ({ language = 'en-US', maxDuration = 15000 } = {}) => {
     window.clearInterval(levelTimerRef.current)
   }, [])
 
+  const stopRecording = useCallback(async () => {
+    clearTimers()
+    setIsRecording(false)
+    setAudioLevel(0)
+    const blob = await VoiceService.stopRecording()
+    return blob
+  }, [clearTimers])
+
   const startRecording = useCallback(async () => {
     setError(null)
+
     setTranscript('')
     try {
       await VoiceService.startRecording()
+
       startedAtRef.current = Date.now()
       setDuration(0)
       setIsRecording(true)
@@ -36,21 +46,16 @@ export const useVoice = ({ language = 'en-US', maxDuration = 15000 } = {}) => {
       timerRef.current = window.setTimeout(() => {
         stopRecording()
       }, maxDuration)
+
     } catch (err) {
+
       setError(err.message || 'Microphone access failed')
       setIsRecording(false)
     }
   }, [maxDuration])
 
-  const stopRecording = useCallback(async () => {
-    clearTimers()
-    setIsRecording(false)
-    setAudioLevel(0)
-    const blob = await VoiceService.stopRecording()
-    return blob
-  }, [clearTimers])
-
   const transcribe = useCallback(
+
     async (audioBlob) => {
       if (!audioBlob) return ''
       try {

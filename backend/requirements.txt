@@ -4,7 +4,8 @@ python-multipart
 python-dotenv
 email-validator
 anthropic
-google-genai
+google-generativeai
+
 google-cloud-speech
 google-cloud-texttospeech
 psycopg[binary]

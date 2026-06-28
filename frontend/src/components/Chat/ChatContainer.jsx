@@ -53,7 +53,7 @@ function ChatContainer({ conversationId }) {
     }
   }, [conversationId, setMessages])
 
-  const handleSend = async (text) => {
+  const handleSend = useCallback(async (text) => {
     setError('')
     try {
       const aiMessage = await sendMessage(text, async () => {
@@ -77,7 +77,7 @@ function ChatContainer({ conversationId }) {
       setError(err.message || 'ARIA could not send that message.')
       return null
     }
-  }
+  }, [conversationId, currentConversation, selectedModel, sendMessage, updateConversation, voiceReplies])
 
 
 

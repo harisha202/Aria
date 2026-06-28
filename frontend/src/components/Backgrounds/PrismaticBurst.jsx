@@ -394,6 +394,8 @@ function PrismaticBurst({
       rendererRef.current = null
       gradientTextureRef.current = null
     }
+  // The renderer is created once; prop changes are synchronized by the effects above.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return <div className="prismatic-burst-container" ref={containerRef} />

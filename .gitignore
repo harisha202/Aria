@@ -4,6 +4,9 @@
 !frontend/.env.development
 __pycache__/
 *.pyc
+*.log
+.venv/
+backend/.venv/
 aria.db
 backend/aria.db
 frontend/dist/

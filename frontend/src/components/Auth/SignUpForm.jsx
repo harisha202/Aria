@@ -15,6 +15,7 @@ function SignUpForm({ navigate }) {
     confirmPassword: '',
   })
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
 
   const strength = useMemo(() => {
     if (!values.password) return 'empty'
@@ -40,11 +41,14 @@ function SignUpForm({ navigate }) {
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) {
+      setLoading(true)
       try {
         await signup({ name: values.name, email: values.email, password: values.password })
         navigate(ROUTES.OTP)
       } catch (err) {
         setErrors({ form: err.message || 'Unable to create account.' })
+      } finally {
+        setLoading(false)
       }
     }
   }
@@ -68,7 +72,7 @@ function SignUpForm({ navigate }) {
         <small>{strength === 'empty' ? 'Password strength' : `${strength} password`}</small>
       </div>
       <Input label="Confirm Password" type="password" name="confirmPassword" value={values.confirmPassword} onChange={updateField} error={errors.confirmPassword} placeholder="Confirm password" autoComplete="new-password" required />
-      <Button text="Sign Up" type="submit" />
+      <Button text="Sign Up" type="submit" loading={loading} />
       {errors.form && <p className="form-error">{errors.form}</p>}
       <div className="auth-links">
         <button type="button" onClick={() => navigate(ROUTES.LOGIN)}>

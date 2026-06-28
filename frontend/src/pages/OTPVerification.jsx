@@ -17,12 +17,13 @@ function OTPVerification({ navigate }) {
       />
       <section className="auth-layout slide-up" aria-labelledby="otp-title">
         <ElectricBorder
-          color="#949ab8"
-          speed={1.1}
-          chaos={0.16}
-          thickness={2}
-          style={{ borderRadius: 16 }}
-        >
+        color="#949ab8"
+        speed={1.1}
+        chaos={0.16}
+        borderRadius={18}
+        thickness={2}
+        className="otp-electric-border"
+      >
           <Card className="auth-card">
             <h1 className="sr-only" id="otp-title">Verify OTP</h1>
             <OTPForm navigate={navigate} />
@@ -34,4 +35,3 @@ function OTPVerification({ navigate }) {
 }
 
 export default OTPVerification
-

@@ -33,11 +33,16 @@ async def signup(payload: SignupRequest):
         result = auth.signup(payload.email, payload.password, payload.name)
         user = result["user"]
         otp_code = generate_otp(user["email"])
-        await otp_verification_service.send_otp_email(
+        sent = await otp_verification_service.send_otp_email(
             user["email"],
             user.get("name") or user["email"].split("@")[0],
             otp_code,
         )
+        if not sent:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Account saved, but OTP email could not be sent. Check SMTP settings and try resend OTP.",
+            )
         return result
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

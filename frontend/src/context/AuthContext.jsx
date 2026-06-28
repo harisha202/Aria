@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import AuthService from '../services/auth.service'
 
 export const AuthContext = createContext(null)
@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false)
   const isAuthenticated = Boolean(user && (token || user.method === 'guest'))
 
-  const persistAuth = (result) => {
+  const persistAuth = useCallback((result) => {
     const nextUser = result.user || result
     setUser(nextUser)
     localStorage.setItem('aria-user', JSON.stringify(nextUser))
@@ -27,9 +27,9 @@ export const AuthProvider = ({ children }) => {
     }
 
     return result
-  }
+  }, [])
 
-  const login = async (emailOrUser, password) => {
+  const login = useCallback(async (emailOrUser, password) => {
     setIsLoading(true)
     try {
       const result =
@@ -42,9 +42,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [persistAuth])
 
-  const signup = async (userData) => {
+  const signup = useCallback(async (userData) => {
     setIsLoading(true)
     try {
       const result = userData.password
@@ -54,18 +54,18 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [persistAuth])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null)
     setToken('')
     localStorage.removeItem('aria-user')
     localStorage.removeItem('aria-token')
-  }
+  }, [])
 
   const value = useMemo(
     () => ({ user, token, isAuthenticated, isLoading, login, signup, logout }),
-    [user, token, isAuthenticated, isLoading],
+    [user, token, isAuthenticated, isLoading, login, signup, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

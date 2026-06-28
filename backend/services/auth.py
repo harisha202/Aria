@@ -30,7 +30,23 @@ def signup(email: str, password: str, name: str = None):
     mark = placeholder()
     existing = fetch_one(f"SELECT * FROM users WHERE email = {mark}", (email.lower(),))
     if existing:
-        raise ValueError("Email is already registered")
+        if existing.get("is_verified"):
+            raise ValueError("Email is already registered")
+
+        execute(
+            f"""
+            UPDATE users
+            SET name = {mark}, hashed_password = {mark}, updated_at = {mark}
+            WHERE email = {mark}
+            """,
+            (
+                name or email.split("@")[0],
+                _hash_password(password),
+                now_iso(),
+                email.lower(),
+            ),
+        )
+        return {"user": public_user(get_user_by_email(email))}
 
     now = now_iso()
     user = {

@@ -82,6 +82,11 @@ function FeedbackForm({ isOpen, onClose, onSubmit, userName, userEmail }) {
               Your feedback helps make ARIA sharper, calmer, and more useful.
             </p>
 
+            <div className="feedback-account">
+              <span>Feedback email</span>
+              <strong>{userEmail}</strong>
+            </div>
+
             <div className="feedback-group">
               <label htmlFor="rating">How satisfied are you with ARIA?</label>
               <div className="rating-container" id="rating">

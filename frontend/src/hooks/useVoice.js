@@ -52,7 +52,7 @@ export const useVoice = ({ language = 'en-US', maxDuration = 15000 } = {}) => {
       setError(err.message || 'Microphone access failed')
       setIsRecording(false)
     }
-  }, [maxDuration])
+  }, [maxDuration, stopRecording])
 
   const transcribe = useCallback(
 

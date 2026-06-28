@@ -16,6 +16,12 @@ function OTPForm({ email = 'email@example.com', navigate }) {
   const inputsRef = useRef([])
 
   useEffect(() => {
+    if (!user?.email && email === 'email@example.com') {
+      navigate(ROUTES.SIGNUP)
+    }
+  }, [email, navigate, user?.email])
+
+  useEffect(() => {
     if (timer <= 0) return undefined
     const intervalId = window.setInterval(() => setTimer((current) => current - 1), 1000)
     return () => window.clearInterval(intervalId)
@@ -32,6 +38,16 @@ function OTPForm({ email = 'email@example.com', navigate }) {
     if (digit && index < OTP_LENGTH - 1) {
       inputsRef.current[index + 1]?.focus()
     }
+  }
+
+  const handlePaste = (event) => {
+    const pastedDigits = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LENGTH)
+    if (!pastedDigits) return
+
+    event.preventDefault()
+    setError('')
+    setDigits(Array.from({ length: OTP_LENGTH }, (_, index) => pastedDigits[index] || ''))
+    inputsRef.current[Math.min(pastedDigits.length, OTP_LENGTH) - 1]?.focus()
   }
 
   const handleKeyDown = (index, event) => {
@@ -95,20 +111,25 @@ function OTPForm({ email = 'email@example.com', navigate }) {
         {digits.map((digit, index) => (
           <input
             key={`otp-${index + 1}`}
+            className={digit ? 'otp-input-filled' : ''}
             ref={(element) => {
               inputsRef.current[index] = element
             }}
             value={digit}
+            autoComplete={index === 0 ? 'one-time-code' : 'off'}
             inputMode="numeric"
             maxLength={1}
+            pattern="[0-9]*"
+            aria-invalid={Boolean(error)}
             aria-label={`Digit ${index + 1}`}
             onChange={(event) => setDigit(index, event.target.value)}
             onKeyDown={(event) => handleKeyDown(index, event)}
+            onPaste={handlePaste}
           />
         ))}
       </div>
       {error && <span className="error-message otp-error">{error}</span>}
-      <Button text="Verify" type="submit" loading={loading} />
+      <Button text="Verify OTP" type="submit" loading={loading} disabled={digits.some((digit) => !digit)} />
       <button className="resend-btn" type="button" onClick={resend} disabled={timer > 0 || resending}>
         {resending ? 'Sending...' : timer > 0 ? `Resend OTP in ${timer}s` : 'Resend OTP'}
       </button>

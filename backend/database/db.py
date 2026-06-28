@@ -1,8 +1,11 @@
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
+from pathlib import Path
 
 from config import DATABASE_URL
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 def is_postgres():
@@ -10,7 +13,11 @@ def is_postgres():
 
 
 def _sqlite_path():
-    return DATABASE_URL.replace("sqlite:///", "", 1)
+    path = DATABASE_URL.replace("sqlite:///", "", 1)
+    sqlite_path = Path(path)
+    if sqlite_path.is_absolute():
+        return str(sqlite_path)
+    return str(BACKEND_DIR / sqlite_path)
 
 
 def _connect():

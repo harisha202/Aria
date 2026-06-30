@@ -1,239 +1,509 @@
 import { useState } from 'react'
 import AiraLogo from '../components/AiraLogo'
 import SoftAurora from '../components/Backgrounds/SoftAurora'
-import Button from '../components/Common/Button'
-import { APP_TAGLINE, ROUTES } from '../utils/constants'
+import { APP_NAME, ROUTES } from '../utils/constants'
 
-const features = [
-  {
-    mark: 'M',
-    title: 'Voice-first interface',
-    description: 'Speak naturally and ARIA understands. No typing required when voice feels easier.',
-  },
-  {
-    mark: 'Z',
-    title: 'Intelligent responses',
-    description: 'Get thoughtful, context-aware answers for writing, learning, planning, and research.',
-  },
-  {
-    mark: 'S',
-    title: 'Privacy first',
-    description: 'A focused workspace for conversations, designed around control and clarity.',
-  },
-  {
-    mark: 'C',
-    title: 'Conversation memory',
-    description: 'Return to saved chats and continue from where your ideas left off.',
-  },
-  {
-    mark: 'H',
-    title: 'Natural voice flow',
-    description: 'Move between listening, speaking, and typing without breaking your rhythm.',
-  },
-  {
-    mark: 'T',
-    title: 'Analytics dashboard',
-    description: 'Track recent conversations, message activity, and quick actions in one place.',
-  },
-]
+function WelcomePageComprehensive({ navigate, onGuest }) {
+  const [showGuestForm, setShowGuestForm] = useState(false)
+  const [guestData, setGuestData] = useState({
+    fullName: '',
+    email: '',
+    company: '',
+    phone: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState({ type: '', text: '' })
 
-const howItWorks = [
-  { number: '1', title: 'Speak', description: 'Press the microphone button and start talking naturally.' },
-  { number: '2', title: 'ARIA listens', description: 'Your voice or text is captured and shaped into a clear prompt.' },
-  { number: '3', title: 'AI responds', description: 'ARIA gives a focused answer while keeping the conversation context.' },
-  { number: '4', title: 'Continue', description: 'Save the thread, revisit it later, or jump into the dashboard.' },
-]
+  const handleGuestInputChange = (e) => {
+    const { name, value } = e.target
+    setGuestData({ ...guestData, [name]: value })
+  }
 
-const useCases = [
-  {
-    mark: 'W',
-    title: 'Content creation',
-    description: 'Brainstorm ideas, write outlines, and refine drafts through conversation.',
-  },
-  {
-    mark: 'L',
-    title: 'Learning',
-    description: 'Ask questions and unpack difficult topics in a natural back-and-forth.',
-  },
-  {
-    mark: 'P',
-    title: 'Productivity',
-    description: 'Organize thoughts, plan projects, and solve problems hands-free.',
-  },
-  {
-    mark: 'A',
-    title: 'Accessibility',
-    description: 'Use a voice-enabled interface when typing is not the easiest option.',
-  },
-  {
-    mark: 'R',
-    title: 'Research',
-    description: 'Explore ideas, compare angles, and turn messy notes into next steps.',
-  },
-  {
-    mark: 'Q',
-    title: 'Quick chat',
-    description: 'Ask simple questions or have a casual conversation whenever you need one.',
-  },
-]
+  const handleGuestSubmit = async (e) => {
+    e.preventDefault()
+    setMessage({ type: '', text: '' })
 
-const faqs = [
-  {
-    question: 'Is my data secure?',
-    answer: 'ARIA is designed as a controlled workspace for your conversations. You can keep chats organized and decide when to continue, delete, or move on.',
-  },
-  {
-    question: 'Do I need a microphone?',
-    answer: 'No. Voice is central to the experience, but you can type messages whenever that is more comfortable.',
-  },
-  {
-    question: 'Can I try ARIA without an account?',
-    answer: 'Yes. Guest access lets you explore the app before creating an account.',
-  },
-  {
-    question: 'Can ARIA remember previous conversations?',
-    answer: 'Yes. Saved conversations help you return to earlier context and continue your work.',
-  },
-  {
-    question: 'Where do I see my activity?',
-    answer: 'The dashboard shows recent conversations, usage statistics, and quick actions.',
-  },
-  {
-    question: 'Can I use ARIA offline?',
-    answer: 'ARIA currently works as an online experience. Offline support can be added later if the project needs it.',
-  },
-]
+    if (!guestData.fullName.trim()) {
+      setMessage({ type: 'error', text: 'Please enter your full name' })
+      return
+    }
+    if (!guestData.email.trim()) {
+      setMessage({ type: 'error', text: 'Please enter your email' })
+      return
+    }
 
-function Welcome({ navigate, onGuest }) {
-  const [expandedFaq, setExpandedFaq] = useState(null)
+    setLoading(true)
+    try {
+      const response = await fetch('/api/auth/guest-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: guestData.fullName,
+          email: guestData.email,
+          phone: guestData.phone || null,
+        }),
+      })
 
-  const handleGuest = () => {
-    onGuest?.()
-    navigate(ROUTES.GUEST)
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({
+          type: 'success',
+          text: 'Check your email for confirmation link',
+        })
+        setTimeout(() => {
+          setShowGuestForm(false)
+          onGuest?.({ guestId: data.guestId, name: guestData.fullName })
+          navigate(ROUTES.CHAT)
+        }, 2000)
+      } else {
+        setMessage({
+          type: 'error',
+          text: data.detail || 'Signup failed. Please try again.',
+        })
+      }
+    } catch {
+      setMessage({
+        type: 'error',
+        text: 'Network error. Please check your connection.',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <main className="page welcome-page welcome-landing">
+    <main className="welcome-dashboard">
       <SoftAurora
-        speed={2.8}
-        scale={1.8}
-        brightness={1.7}
-        color1="#06B6D4"
-        color2="#3B82F6"
-        noiseFrequency={4.5}
-        noiseAmplitude={2.5}
-        bandHeight={0.55}
-        bandSpread={1}
-        octaveDecay={0.22}
+        speed={1.5}
+        scale={2.0}
+        brightness={1.2}
+        color1="#0f172a"
+        color2="#1e1b4b"
+        noiseFrequency={3.0}
+        noiseAmplitude={1.5}
+        bandHeight={0.4}
+        bandSpread={1.2}
         layerOffset={0}
-        colorSpeed={1}
-        enableMouseInteraction
-        mouseInfluence={0.25}
+        colorSpeed={0.5}
       />
 
-      <section className="welcome-hero fade-in" aria-labelledby="welcome-title">
-        <div className="welcome-hero-heading">
-          <span className="welcome-hero-logo" aria-label="ARIA logo">
-            <AiraLogo className="aira-logo" />
-          </span>
-          <span className="welcome-title-group">
-            <h1 id="welcome-title">ARIA</h1>
-            <h2>{APP_TAGLINE}</h2>
-          </span>
+      <div className="dashboard-content">
+        <div className="dashboard-header">
+          <AiraLogo className="dashboard-logo" />
+          <h1 className="dashboard-title">{APP_NAME}</h1>
+          <h3 className="dashboard-subtitle">Where Silence Finds Its Voice</h3>
+          <h4 className="dashboard-instruction">Select your path to access the intelligent assistant</h4>
         </div>
-        <div className="welcome-actions">
-          <Button
-            text="Get Started"
-            className="welcome-action-login"
+
+        <div className="role-cards-container">
+          {/* Sign In Card */}
+          <div 
+            className="role-card role-signin"
             onClick={() => navigate(ROUTES.LOGIN)}
-          />
-          <Button
-            text="Create Account"
-            variant="secondary"
-            className="welcome-action-signup"
+          >
+            <div className="role-icon">S</div>
+            <h3>Sign In</h3>
+            <p>Access your existing account</p>
+            <div className="role-arrow">&gt;</div>
+          </div>
+
+          {/* Create Account Card */}
+          <div 
+            className="role-card role-signup"
             onClick={() => navigate(ROUTES.SIGNUP)}
-          />
-          <Button
-            text="Try as Guest Account"
-            variant="secondary"
-            className="welcome-action-guest"
-            onClick={handleGuest}
-          />
-        </div>
-        <p className="description welcome-info">
-          An adaptive voice interface designed for calm listening, confident response, and seamless
-          movement from thought to action.
-        </p>
-      </section>
+          >
+            <div className="role-icon">C</div>
+            <h3>Create Account</h3>
+            <p>Register a new ARIA profile</p>
+            <div className="role-arrow">&gt;</div>
+          </div>
 
-      <section className="welcome-section" id="features" aria-labelledby="welcome-features-title">
-        <p className="eyebrow">Features</p>
-        <h2 id="welcome-features-title">What makes ARIA special</h2>
-        <p>Thoughtfully designed tools that make voice interaction natural, intuitive, and useful.</p>
-        <div className="welcome-feature-grid">
-          {features.map((feature) => (
-            <article className="welcome-feature-card" key={feature.title}>
-              <span className="welcome-feature-mark" aria-hidden="true">{feature.mark}</span>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-            </article>
-          ))}
+          {/* Guest Card */}
+          <div 
+            className="role-card role-guest"
+            onClick={() => setShowGuestForm(true)}
+          >
+            <div className="role-icon">G</div>
+            <h3>Try as Guest</h3>
+            <p>Explore without an account</p>
+            <div className="role-arrow">&gt;</div>
+          </div>
         </div>
-      </section>
-      <section className="welcome-section" aria-labelledby="welcome-steps-title">
-        <p className="eyebrow">How it works</p>
-        <h2 id="welcome-steps-title">How ARIA works</h2>
-        <div className="welcome-steps">
-          {howItWorks.map((step) => (
-            <article className="welcome-step" key={step.title}>
-              <span>{step.number}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
 
-      <section className="welcome-section" aria-labelledby="welcome-use-title">
-        <p className="eyebrow">Use cases</p>
-        <h2 id="welcome-use-title">ARIA adapts to how you work</h2>
-        <p>Whether you are creating, learning, researching, or just chatting, ARIA keeps the flow simple.</p>
-        <div className="welcome-use-grid">
-          {useCases.map((useCase) => (
-            <article className="welcome-use-card" key={useCase.title}>
-              <span aria-hidden="true">{useCase.mark}</span>
-              <h3>{useCase.title}</h3>
-              <p>{useCase.description}</p>
-            </article>
-          ))}
+        {/* Info Section */}
+        <div className="dashboard-info" style={{ marginTop: '4rem', textAlign: 'center', maxWidth: '800px' }}>
+          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#f8fafc' }}>Experience the Future of AI</h2>
+          <p style={{ fontSize: '1rem', color: '#94a3b8', lineHeight: '1.8' }}>
+            ARIA is your advanced voice-first AI companion. Designed for seamless natural language interactions, 
+            military-grade privacy, and lightning-fast real-time responses. Choose your path 
+            above to begin a smarter conversation today.
+          </p>
         </div>
-      </section>
+      </div>
 
-      <section className="welcome-section" aria-labelledby="welcome-faq-title">
-        <p className="eyebrow">FAQ</p>
-        <h2 id="welcome-faq-title">Frequently asked questions</h2>
-        <div className="welcome-faq-accordion">
-          {faqs.map((faq, index) => (
-            <article className="welcome-faq-item" key={faq.question}>
-              <button
-                type="button"
-                onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                aria-expanded={expandedFaq === index}
-              >
-                <span>{faq.question}</span>
-                <span className="welcome-faq-arrow" aria-hidden="true">&gt;</span>
+      {/* GUEST MODAL */}
+      {showGuestForm && (
+        <div className="guest-modal-overlay" onClick={() => setShowGuestForm(false)}>
+          <div className="guest-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="guest-modal-header">
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <AiraLogo style={{ width: 72, height: 72, marginBottom: '1.5rem', filter: 'drop-shadow(0 0 15px rgba(34, 197, 94, 0.5))' }} />
+              </div>
+              <h2>Guest Access</h2>
+              <p>Explore ARIA with read-only access. No account needed.</p>
+            </div>
+
+            <form onSubmit={handleGuestSubmit} className="guest-form">
+              <div className="form-group">
+                <label>FULL NAME</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={guestData.fullName}
+                  onChange={handleGuestInputChange}
+                  placeholder="John Doe"
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>EMAIL ADDRESS</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={guestData.email}
+                  onChange={handleGuestInputChange}
+                  placeholder="john@example.com"
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>COMPANY NAME</label>
+                <input
+                  type="text"
+                  name="company"
+                  value={guestData.company}
+                  onChange={handleGuestInputChange}
+                  placeholder="Acme Corporation"
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>PHONE NUMBER</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={guestData.phone}
+                  onChange={handleGuestInputChange}
+                  placeholder="+1 (555) 000-0000"
+                  disabled={loading}
+                />
+              </div>
+
+              {message.text && (
+                <div className={`message message-${message.type}`}>
+                  {message.text}
+                </div>
+              )}
+
+              <button type="submit" className="btn-submit" disabled={loading}>
+                {loading ? 'Creating Account...' : 'Continue as Guest'}
               </button>
-              {expandedFaq === index && <p>{faq.answer}</p>}
-            </article>
-          ))}
-        </div>
-      </section>
 
-      <footer className="welcome-footer">
-        <small>2026 ARIA. All rights reserved.</small>
-      </footer>
+              <button type="button" className="btn-back" onClick={() => setShowGuestForm(false)}>
+                Back to Dashboard
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        .welcome-dashboard {
+          min-height: 100vh;
+          background: #09090b;
+          color: #fff;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .dashboard-content {
+          position: relative;
+          z-index: 10;
+          width: 100%;
+          max-width: 1100px;
+          padding: 2rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .dashboard-header {
+          text-align: center;
+          margin-bottom: 4rem;
+        }
+
+        .dashboard-logo {
+          width: 150px;
+          height: 150px;
+          margin: 0 auto 1.5rem;
+          filter: drop-shadow(0 0 30px rgba(56, 182, 255, 0.6));
+        }
+
+        .dashboard-title {
+          font-size: 6.5rem;
+          font-weight: 800;
+          letter-spacing: -3px;
+          background: linear-gradient(135deg, #38b6ff 0%, #a855f7 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+          font-size: 2.5rem;
+          font-weight: 600;
+          color: #e2e8f0;
+          margin-bottom: 0.8rem;
+        }
+
+        .dashboard-instruction {
+          font-size: 1.2rem;
+          font-weight: 400;
+          color: #94a3b8;
+        }
+
+        .role-cards-container {
+          display: flex;
+          gap: 2rem;
+          justify-content: center;
+          flex-wrap: wrap;
+          width: 100%;
+        }
+
+        .role-card {
+          flex: 1;
+          min-width: 260px;
+          max-width: 300px;
+          background: rgba(15, 23, 42, 0.8);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 16px;
+          padding: 3rem 2rem;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          backdrop-filter: blur(10px);
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .role-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          border-radius: 16px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          pointer-events: none;
+        }
+
+        /* Glowing Themes for Cards based on reference image */
+        .role-signin {
+          border-color: rgba(6, 182, 212, 0.3); /* Cyan */
+        }
+        .role-signin:hover {
+          transform: translateY(-5px);
+          border-color: rgba(6, 182, 212, 0.8);
+          box-shadow: 0 10px 40px -10px rgba(6, 182, 212, 0.3);
+        }
+        .role-signin .role-icon {
+          color: #06b6d4;
+          text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .role-signup {
+          border-color: rgba(236, 72, 153, 0.3); /* Pink */
+        }
+        .role-signup:hover {
+          transform: translateY(-5px);
+          border-color: rgba(236, 72, 153, 0.8);
+          box-shadow: 0 10px 40px -10px rgba(236, 72, 153, 0.3);
+        }
+        .role-signup .role-icon {
+          color: #ec4899;
+          text-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+        }
+
+        .role-guest {
+          border-color: rgba(34, 197, 94, 0.3); /* Green */
+        }
+        .role-guest:hover {
+          transform: translateY(-5px);
+          border-color: rgba(34, 197, 94, 0.8);
+          box-shadow: 0 10px 40px -10px rgba(34, 197, 94, 0.3);
+        }
+        .role-guest .role-icon {
+          color: #22c55e;
+          text-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+        }
+
+        .role-icon {
+          font-size: 3rem;
+          font-weight: 900;
+          margin-bottom: 1.5rem;
+          font-family: monospace;
+        }
+
+        .role-card h3 {
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: #f8fafc;
+          margin-bottom: 0.5rem;
+        }
+
+        .role-card p {
+          font-size: 0.9rem;
+          color: #94a3b8;
+          margin-bottom: 2rem;
+        }
+
+        .role-arrow {
+          color: inherit;
+          font-size: 1.2rem;
+          font-weight: bold;
+          opacity: 0.5;
+          transition: all 0.3s ease;
+        }
+        .role-signin .role-arrow { color: #06b6d4; }
+        .role-signup .role-arrow { color: #ec4899; }
+        .role-guest .role-arrow { color: #22c55e; }
+
+        .role-card:hover .role-arrow {
+          opacity: 1;
+          transform: translateX(5px);
+        }
+
+        /* GUEST MODAL (kept minimal and matching auth modal aesthetic) */
+        .guest-modal-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(8px);
+          z-index: 100;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .guest-modal {
+          background: rgba(15, 23, 42, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 3rem;
+          width: 100%;
+          max-width: 450px;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .guest-modal-header h2 {
+          font-size: 1.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .guest-modal-header p {
+          color: #94a3b8;
+          font-size: 0.9rem;
+          margin-bottom: 2rem;
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+          display: block;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #94a3b8;
+          margin-bottom: 0.5rem;
+          letter-spacing: 1px;
+        }
+
+        .form-group input {
+          width: 100%;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          padding: 0.75rem 1rem;
+          color: #fff;
+          font-size: 1rem;
+          transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+          outline: none;
+          border-color: #38b6ff;
+        }
+
+        .btn-submit, .btn-back {
+          width: 100%;
+          padding: 1rem;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          border: none;
+        }
+
+        .btn-submit {
+          background: linear-gradient(135deg, #38b6ff 0%, #3b82f6 100%);
+          color: #fff;
+          margin-bottom: 1rem;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+          filter: brightness(1.1);
+        }
+
+        .btn-back {
+          background: transparent;
+          color: #94a3b8;
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-back:hover {
+          background: rgba(255,255,255,0.05);
+          color: #fff;
+        }
+
+        .message {
+          padding: 1rem;
+          border-radius: 8px;
+          margin-bottom: 1.5rem;
+          font-size: 0.9rem;
+          text-align: center;
+        }
+        .message-error { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .message-success { background: rgba(34, 197, 94, 0.1); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.2); }
+      `}</style>
     </main>
   )
 }
 
-export default Welcome
+export default WelcomePageComprehensive

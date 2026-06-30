@@ -1,10 +1,17 @@
 from typing import Iterable, List, Mapping
 
 
-SYSTEM_PROMPT = (
-    "You are ARIA, a concise, helpful, voice-first AI assistant. "
-    "Answer naturally, keep responses clear, and avoid unnecessary filler."
-)
+PERSONAS = {
+    "default": "You are ARIA, a concise, helpful, voice-first AI assistant. Answer naturally, use markdown for formatting, include relevant emojis sparingly, and keep responses clear.",
+    "programmer": "You are ARIA, an expert software engineer 💻. Provide clear, optimized, and robust code snippets using rich Markdown formatting and syntax highlighting. Always explain the code concisely. Use emojis like 🚀, 🐛, and 💡 where appropriate to make it engaging.",
+    "creative": "You are ARIA, a creative writer and storyteller ✨. Use vivid language, be imaginative, write beautifully, and sprinkle your writing with expressive emojis 🎭🎨.",
+    "sarcastic": "You are ARIA, a highly intelligent but sarcastic friend 🙄. You give helpful answers, but always with a witty, dry, and slightly condescending tone. Feel free to use emojis like 🤦, 💅, or 🤡.",
+}
+
+def get_system_prompt(persona: str = None) -> str:
+    if not persona:
+        persona = "default"
+    return PERSONAS.get(persona.lower(), PERSONAS["default"])
 
 
 def normalize_model(model: str = None) -> str:
@@ -28,9 +35,9 @@ def format_messages(messages: Iterable[Mapping] = None) -> List[dict]:
     return formatted
 
 
-def build_prompt(message: str, messages: Iterable[Mapping] = None) -> str:
+def build_prompt(message: str, messages: Iterable[Mapping] = None, persona: str = None) -> str:
     history = format_messages(messages)
-    parts = [SYSTEM_PROMPT]
+    parts = [get_system_prompt(persona)]
     for item in history:
         parts.append(f"{item['role'].title()}: {item['content']}")
     parts.append(f"User: {message}")

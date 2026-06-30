@@ -1,24 +1,17 @@
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 import config
 from database.db import init_db
-from routes import ai, auth, chat, feedback, verification, voice, websocket
+from routes import ai, auth, chat, feedback, user, verification, voice, websocket
+from utils.logger import get_logger
+
+logger = get_logger("aria.main")
 
 app = FastAPI(title="ARIA API")
-
-if config.DEBUG:
-    print("=== SMTP DEBUG ===")
-    print(f"SMTP_HOST: {config.SMTP_HOST or 'EMPTY'}")
-    print(f"SMTP_PORT: {config.SMTP_PORT}")
-    print(f"SMTP_USER: {config.SMTP_USER or 'EMPTY'}")
-    print(
-        f"SMTP_PASSWORD: {config.SMTP_PASSWORD[:5]}***"
-        if config.SMTP_PASSWORD
-        else "SMTP_PASSWORD: EMPTY"
-    )
-    print(f"FROM_EMAIL: {config.FROM_EMAIL or 'EMPTY'}")
-    print("==================")
 
 origins = [origin.strip() for origin in config.CORS_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
@@ -38,6 +31,16 @@ app.include_router(ai.router)
 app.include_router(feedback.router)
 app.include_router(verification.router)
 app.include_router(websocket.router)
+app.include_router(user.router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled error on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Our team has been notified."},
+    )
 
 
 @app.get("/health")

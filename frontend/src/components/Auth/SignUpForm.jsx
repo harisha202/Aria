@@ -55,9 +55,9 @@ function SignUpForm({ navigate }) {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
-      <div className="auth-form-logo">
-        <button className="auth-brand-button" type="button" onClick={() => navigate(ROUTES.WELCOME)} aria-label="Back to welcome">
-          <AiraLogo className="auth-logo-canvas" width={400} height={380} />
+      <div className="auth-form-logo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+        <button className="auth-brand-button" type="button" onClick={() => navigate(ROUTES.WELCOME)} aria-label="Back to welcome" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+          <AiraLogo style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 15px rgba(236, 72, 153, 0.5))' }} />
         </button>
       </div>
       <div className="auth-header">

@@ -48,6 +48,8 @@ class AIService:
         messages=None,
         model: str = None,
         max_tokens: int = 800,
+        persona: str = None,
+        image: str = None,
     ) -> dict:
         requested_model = normalize_model(model or self.default_model)
         model_order = [requested_model] + [
@@ -60,7 +62,7 @@ class AIService:
             if not provider or not provider.is_configured:
                 continue
             try:
-                response = await provider.generate(message, messages or [], max_tokens)
+                response = await provider.generate(message, messages or [], max_tokens, persona, image)
                 if response:
                     return {
                         "response": response,
@@ -77,13 +79,36 @@ class AIService:
             "errors": errors,
         }
 
-    async def stream_response(self, *args, **kwargs):
-        result = await self.generate_response(*args, **kwargs)
+    async def stream_response(self, message: str, messages=None, model: str = None, max_tokens: int = 800, persona: str = None, image: str = None):
+        requested_model = normalize_model(model or self.default_model)
+        model_order = [requested_model] + [
+            key for key in self.providers.keys() if key != requested_model
+        ]
+
+        for model_key in model_order:
+            provider = self.providers.get(model_key)
+            if not provider or not provider.is_configured:
+                continue
+            try:
+                # We yield immediately from the provider's stream
+                async for chunk in provider.stream_response(message, messages or [], max_tokens, persona, image):
+                    yield {
+                        "chunk": chunk,
+                        "model": model_key,
+                        "fallback": False,
+                    }
+                return  # If we get here, the stream succeeded
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).warning("Streaming failed for %s: %s", model_key, exc)
+
+        # If all providers fail or none are configured, fall back to mock stream
+        result = self.handle_error(RuntimeError("All AI providers failed or none configured."))
         for chunk in chunk_text(result["response"]):
             yield {
                 "chunk": chunk,
                 "model": result["model"],
-                "fallback": result.get("fallback", False),
+                "fallback": True,
             }
 
 

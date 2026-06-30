@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from typing import Optional
 
@@ -7,9 +7,13 @@ from middleware.auth import (
     require_conversation_access,
     resolve_chat_user_id,
 )
+from middleware.rate_limit import chat_minute_limit
 from services.ai import ai_service
 from services.chat import chat_service
 from services.voice import voice_service
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
 
@@ -68,28 +72,54 @@ async def get_messages(conversation_id: str, skip: int = 0, limit: int = 50, use
 
 
 @router.post("/send-message")
-async def send_message(data: SendMessageRequest, user=Depends(get_optional_user)):
+async def send_message(
+    data: SendMessageRequest,
+    request: Request,
+    user=Depends(get_optional_user),
+    _=Depends(chat_minute_limit),
+):
     text = (data.text or data.content or "").strip()
     if not text:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message text is required")
 
+    options = data.options or {}
+    model = options.get("model") or data.model or "claude"
+    persona = options.get("persona") or "default"
+    image = options.get("image")
+
     conversation_id = data.conversation_id
     if not conversation_id:
         resolved_user_id = resolve_chat_user_id(data.user_id, user)
-        conversation = chat_service.create_conversation(resolved_user_id, text[:48], data.model or "claude")
+        conversation = chat_service.create_conversation(resolved_user_id, text[:48], model)
         conversation_id = conversation["id"]
     else:
         conversation = chat_service.get_conversation(conversation_id)
         require_conversation_access(conversation, user)
         resolved_user_id = conversation["user_id"]
 
-    user_message = chat_service.save_message(resolved_user_id, conversation_id, {"content": text, "sender": "user"})
+    msg_content_to_save = text if not image else f"[Image attached]\n{text}"
+    user_message = chat_service.save_message(resolved_user_id, conversation_id, {"content": msg_content_to_save, "sender": "user"})
     history = [
         {"role": message["role"], "content": message["content"]}
         for message in chat_service.get_messages(conversation_id, 20)
     ]
-    ai_result = await ai_service.generate_response(text, history, data.model)
-    audio = await voice_service.synthesize_voice(ai_result["response"]) if data.voice else None
+
+    try:
+        ai_result = await ai_service.generate_response(text, history, model=model, persona=persona, image=image)
+    except Exception as exc:
+        logger.error("AI generation error for conversation %s: %s", conversation_id, exc, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI service temporarily unavailable. Please try again.",
+        ) from exc
+
+    audio = None
+    if data.voice:
+        try:
+            audio = await voice_service.synthesize_voice(ai_result["response"])
+        except Exception as exc:
+            logger.warning("TTS failed (non-critical): %s", exc)
+
     ai_message = chat_service.save_message(
         resolved_user_id,
         conversation_id,
@@ -100,6 +130,14 @@ async def send_message(data: SendMessageRequest, user=Depends(get_optional_user)
             "audio_base64": audio.get("audio_base64") if audio else None,
         },
     )
+
+    logger.info(
+        "Message processed — model=%s fallback=%s conv=%s",
+        ai_result["model"],
+        ai_result.get("fallback"),
+        conversation_id,
+    )
+
     return {
         "conversation_id": conversation_id,
         "user_message": user_message,

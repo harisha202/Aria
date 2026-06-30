@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-function AiraLogo({ className = '', width = 400, height = 380 }) {
+function AiraLogo({ className = '', width = 400, height = 380, style = {} }) {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -187,6 +187,7 @@ function AiraLogo({ className = '', width = 400, height = 380 }) {
       className={className}
       width={width}
       height={height}
+      style={style}
       aria-label="AIRA icon, silence on the left and voice on the right"
       role="img"
     />

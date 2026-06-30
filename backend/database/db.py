@@ -158,7 +158,8 @@ def init_db():
         ]:
             try:
                 connection.execute(statement)
-            except Exception:
+            except (sqlite3.OperationalError, Exception) as exc:
+                # Catch specific migration errors gracefully; pass for now since we run these on every startup
                 pass
         now = now_iso()
         connection.execute(

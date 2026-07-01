@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 import './FloatingLines.css'
 
 const vertexShader = `
@@ -267,6 +268,7 @@ export default function FloatingLines({
     targetParallaxX: 0,
     targetParallaxY: 0,
   })
+  const prefersReducedMotion = useReducedMotion()
 
   const gradient = useMemo(() => {
     const stops = linesGradient?.length ? linesGradient : [gradientStart, gradientMid, gradientEnd]
@@ -420,6 +422,15 @@ export default function FloatingLines({
       state.currentParallaxX += (state.targetParallaxX - state.currentParallaxX) * mouseDamping
       state.currentParallaxY += (state.targetParallaxY - state.currentParallaxY) * mouseDamping
 
+      if (prefersReducedMotion) {
+        gl.uniform1f(uniforms.iTime, 0)
+        gl.uniform2f(uniforms.iMouse, state.currentX, state.currentY)
+        gl.uniform1f(uniforms.bendInfluence, state.currentInfluence)
+        gl.uniform2f(uniforms.parallaxOffset, state.currentParallaxX, state.currentParallaxY)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        return
+      }
+
       gl.uniform1f(uniforms.iTime, (time - startedAt) * 0.001)
       gl.uniform2f(uniforms.iMouse, state.currentX, state.currentY)
       gl.uniform1f(uniforms.bendInfluence, state.currentInfluence)
@@ -458,6 +469,7 @@ export default function FloatingLines({
     parallax,
     parallaxStrength,
     topWavePosition,
+    prefersReducedMotion,
   ])
 
   return <div ref={containerRef} className={`floating-lines-container ${className}`.trim()} style={style} />

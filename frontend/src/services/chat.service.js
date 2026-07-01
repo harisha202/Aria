@@ -18,6 +18,11 @@ export const ChatService = {
     return data.conversations || []
   },
 
+  async getWeeklyStats(userId = getUserId()) {
+    const data = await api.get(`/api/v1/chat/stats/weekly?user_id=${encodeURIComponent(userId)}`)
+    return data.stats || []
+  },
+
   async getConversation(id) {
     const data = await api.get(`/api/v1/chat/conversations/${id}`)
     return data.conversation || null
@@ -30,10 +35,6 @@ export const ChatService = {
       model: data.model || import.meta.env.VITE_DEFAULT_AI_MODEL || 'claude',
     })
     return response.conversation
-  },
-
-  async updateConversation(id, data) {
-    return { id, ...data }
   },
 
   async deleteConversation(id) {
@@ -70,18 +71,10 @@ export const ChatService = {
     return true
   },
 
-  async updateMessage(messageId, data) {
-    return { id: messageId, ...data }
-  },
-
   async searchConversations(query) {
     const conversations = await this.getConversations()
     const lowerQuery = query.toLowerCase()
     return conversations.filter((conversation) => (conversation.title || '').toLowerCase().includes(lowerQuery))
-  },
-
-  async searchMessages() {
-    return []
   },
 }
 

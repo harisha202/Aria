@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import ChatContainer from '../components/Chat/ChatContainer'
 import ConversationList from '../components/Chat/ConversationList'
 import AiraLogo from '../components/AiraLogo'
-import Ballpit from '../components/Backgrounds/Ballpit'
 import Sidebar from '../components/Common/Sidebar'
+import Button from '../components/Common/Button'
+import Ballpit from '../components/Backgrounds/Ballpit'
 import Toast from '../components/Common/Toast'
 import SettingsLogo from '../components/Settings/SettingsLogo'
 import { useChatContext } from '../context/ChatContext'
-import { ROUTES } from '../utils/constants'
+import { APP_NAME, ROUTES } from '../utils/constants'
 
 function ChatPage({ navigate }) {
   const {
@@ -49,51 +50,59 @@ function ChatPage({ navigate }) {
   const activeConversation = currentConversation || conversations[0] || null
 
   return (
-    <main className="app-shell chat-layout">
-      <div className="chat-ballpit-bg">
-        <Ballpit count={150} gravity={0.01} friction={0.9975} wallBounce={1} followCursor={false} />
+    <main className="chat-layout">
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'auto' }}>
+        <Ballpit
+          count={80}
+          gravity={0.01}
+          friction={0.9975}
+          wallBounce={1}
+          followCursor={true}
+        />
       </div>
       <Sidebar
         title="Conversations"
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen((isOpen) => !isOpen)}
       >
-        <div className="sidebar-section">
-          <button type="button" className="btn btn-primary" onClick={handleNewChat}>
-            New Chat
-          </button>
-        </div>
-        <div className="sidebar-section">
-          <input
-            className="sidebar-search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search chats..."
-          />
-        </div>
-        <ConversationList
-          conversations={filteredConversations}
-          currentId={activeConversation?.id}
-          onSelect={selectConversation}
-          onDelete={deleteConversation}
-        />
+        {conversations.length === 0 ? (
+          <Button variant="primary" onClick={handleNewChat}>
+            Start New Chat
+          </Button>
+        ) : (
+          <>
+            <div className="sidebar-section">
+              <input
+                className="sidebar-search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search chats..."
+              />
+            </div>
+            <ConversationList
+              conversations={filteredConversations}
+              currentId={activeConversation?.id}
+              onSelect={selectConversation}
+              onDelete={deleteConversation}
+            />
+          </>
+        )}
         <div className="sidebar-section chat-nav-section" aria-label="Page connections">
-          <button type="button" className="ghost-button" onClick={() => navigate(ROUTES.DASHBOARD)}>
+          <Button variant="ghost" onClick={() => navigate(ROUTES.DASHBOARD)}>
             <SettingsLogo type="dashboard" size="sm" />
             Dashboard
-          </button>
-          <button type="button" className="ghost-button" onClick={() => navigate(ROUTES.SETTINGS)}>
+          </Button>
+          <Button variant="ghost" onClick={() => navigate(ROUTES.SETTINGS)}>
             <SettingsLogo type="settings" size="sm" />
             Settings
-          </button>
-          <button
-            type="button"
-            className="ghost-button"
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => navigate(ROUTES.SETTINGS, { state: { tab: 'notifications' } })}
           >
             <SettingsLogo type="notifications" size="sm" />
             Notifications
-          </button>
+          </Button>
         </div>
       </Sidebar>
 
@@ -104,23 +113,22 @@ function ChatPage({ navigate }) {
               <AiraLogo className="chat-logo-canvas" width={400} height={380} />
             </div>
             <div>
-              <p className="step-label">ARIA Chat</p>
+              <p className="step-label">{APP_NAME} Chat</p>
               <h1>{activeConversation?.title || 'New conversation'}</h1>
             </div>
           </div>
           <div className="chat-header-actions">
-            <button
-              type="button"
-              className="ghost-button"
+            <Button
+              variant="ghost"
               onClick={() => navigate(ROUTES.SETTINGS, { state: { tab: 'notifications' } })}
             >
               <SettingsLogo type="notifications" size="sm" />
               Notifications
-            </button>
-            <button type="button" className="ghost-button" onClick={handleLogout}>
+            </Button>
+            <Button variant="ghost" onClick={handleLogout}>
               <SettingsLogo type="logout" size="sm" />
-              Logout
-            </button>
+              Sign out
+            </Button>
           </div>
         </header>
 
@@ -132,13 +140,11 @@ function ChatPage({ navigate }) {
               <div className="chat-empty-logo">
                 <AiraLogo className="chat-logo-canvas" width={400} height={380} />
               </div>
-              <p className="step-label">Welcome to AIRA</p>
-              <h2>Where silence finds its voice</h2>
-              <h2>Start a conversation</h2>
-              <p className="muted">Create a new chat to begin using ARIA.</p>
-              <button type="button" className="btn btn-primary" onClick={handleNewChat}>
-                New Chat
-              </button>
+              <h2>Welcome to {APP_NAME}</h2>
+              <p>Where Silence Finds Its Voice</p>
+              <Button variant="primary" onClick={handleNewChat}>
+                Start a conversation
+              </Button>
             </div>
           </div>
         )}

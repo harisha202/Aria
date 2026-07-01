@@ -56,9 +56,7 @@ function SignUpForm({ navigate }) {
   return (
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
       <div className="auth-form-logo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-        <button className="auth-brand-button" type="button" onClick={() => navigate(ROUTES.WELCOME)} aria-label="Back to welcome" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <AiraLogo style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 15px rgba(236, 72, 153, 0.5))' }} />
-        </button>
+        <AiraLogo style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 15px rgba(var(--primary-rgb), 0.5))' }} />
       </div>
       <div className="auth-header">
         <p className="step-label">Step 1 of 2</p>
@@ -72,12 +70,20 @@ function SignUpForm({ navigate }) {
         <small>{strength === 'empty' ? 'Password strength' : `${strength} password`}</small>
       </div>
       <Input label="Confirm Password" type="password" name="confirmPassword" value={values.confirmPassword} onChange={updateField} error={errors.confirmPassword} placeholder="Confirm password" autoComplete="new-password" required />
-      <Button text="Sign Up" type="submit" loading={loading} />
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={loading}
+        loading={loading}
+        style={{ width: '100%', padding: '1rem', marginTop: '1rem', fontSize: '1rem' }}
+      >
+        Create Account
+      </Button>
       {errors.form && <p className="form-error">{errors.form}</p>}
       <div className="auth-links">
-        <button type="button" onClick={() => navigate(ROUTES.LOGIN)}>
+        <Button variant="ghost" onClick={() => navigate(ROUTES.LOGIN)}>
           Already have an account?
-        </button>
+        </Button>
       </div>
     </form>
   )

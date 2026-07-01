@@ -65,13 +65,14 @@ export class VoicePlayer {
     this.audio = null
   }
 
-  playAudio(audioBlobOrBase64, contentType = 'audio/mpeg') {
+  playAudio(audioBlobOrBase64, contentType = 'audio/mpeg', rate = 1.0) {
     this.stopPlayback()
     const source =
       audioBlobOrBase64 instanceof Blob
         ? URL.createObjectURL(audioBlobOrBase64)
         : `data:${contentType};base64,${audioBlobOrBase64}`
     this.audio = new Audio(source)
+    this.audio.playbackRate = rate
     this.audio.play()
     return this.audio
   }
@@ -116,8 +117,8 @@ export const VoiceService = {
     return api.post('/api/v1/voice/speak', { text, language_code: languageCode, voice_name: voiceName })
   },
 
-  playAudio(audioBlobOrBase64, contentType) {
-    return this.player.playAudio(audioBlobOrBase64, contentType)
+  playAudio(audioBlobOrBase64, contentType, rate = 1.0) {
+    return this.player.playAudio(audioBlobOrBase64, contentType, rate)
   },
 
   stopPlayback() {

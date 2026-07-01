@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from 'react'
-import useLocalStorage from './useLocalStorage'
 import { ChatService } from '../services/chat.service'
 
 const createMessage = ({ content, role = 'user', metadata = {} }) => ({
@@ -10,10 +9,10 @@ const createMessage = ({ content, role = 'user', metadata = {} }) => ({
   createdAt: new Date().toISOString(),
 })
 
-export const useChat = ({ storageKey = 'aira-chat-history', initialMessages = [] } = {}) => {
-  const [messages, setMessages, clearStoredMessages] = useLocalStorage(storageKey, initialMessages)
-  const [conversations, setConversations] = useLocalStorage('aira-conversations', [])
-  const [currentConversation, setCurrentConversation] = useState(conversations[0] || null)
+export const useChat = ({ initialMessages = [] } = {}) => {
+  const [messages, setMessages] = useState(initialMessages)
+  const [conversations, setConversations] = useState([])
+  const [currentConversation, setCurrentConversation] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -38,17 +37,6 @@ export const useChat = ({ storageKey = 'aira-chat-history', initialMessages = []
     [addMessage],
   )
 
-  const updateMessage = useCallback(
-    (id, updates) => {
-      setMessages((currentMessages) =>
-        currentMessages.map((message) =>
-          message.id === id ? { ...message, ...updates } : message,
-        ),
-      )
-    },
-    [setMessages],
-  )
-
   const removeMessage = useCallback(
     (id) => {
       setMessages((currentMessages) => currentMessages.filter((message) => message.id !== id))
@@ -57,9 +45,9 @@ export const useChat = ({ storageKey = 'aira-chat-history', initialMessages = []
   )
 
   const clearMessages = useCallback(() => {
-    clearStoredMessages()
+    setMessages([])
     setError(null)
-  }, [clearStoredMessages])
+  }, [setMessages])
 
   const loadConversations = useCallback(async () => {
     setIsLoading(true)
@@ -118,22 +106,6 @@ export const useChat = ({ storageKey = 'aira-chat-history', initialMessages = []
     [setConversations],
   )
 
-  const updateConversation = useCallback(
-    async (id, data) => {
-      const updatedConversation = await ChatService.updateConversation(id, data)
-      setConversations((current) =>
-        current.map((conversation) =>
-          conversation.id === id ? { ...conversation, ...updatedConversation } : conversation,
-        ),
-      )
-      setCurrentConversation((current) =>
-        current?.id === id ? { ...current, ...updatedConversation } : current,
-      )
-      return updatedConversation
-    },
-    [setConversations],
-  )
-
   const sendMessage = useCallback(
     async (content, sendHandler) => {
       if (!content?.trim()) return null
@@ -186,7 +158,6 @@ export const useChat = ({ storageKey = 'aira-chat-history', initialMessages = []
     addMessage,
     addUserMessage,
     addAssistantMessage,
-    updateMessage,
     removeMessage,
     clearMessages,
     sendMessage,
@@ -197,7 +168,6 @@ export const useChat = ({ storageKey = 'aira-chat-history', initialMessages = []
     createConversation,
     selectConversation,
     deleteConversation,
-    updateConversation,
   }
 }
 

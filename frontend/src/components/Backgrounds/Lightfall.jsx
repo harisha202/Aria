@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 import './Lightfall.css'
 
 const MAX_COLORS = 8
@@ -218,6 +219,7 @@ function Lightfall({
   mixBlendMode,
 }) {
   const containerRef = useRef(null)
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     const container = containerRef.current
@@ -327,6 +329,13 @@ function Lightfall({
     }
 
     const loop = (time) => {
+      if (prefersReducedMotion) {
+        gl.uniform1f(uniforms.iTime, 0)
+        gl.uniform2f(uniforms.iMouse, mouseCurrent[0], mouseCurrent[1])
+        if (!paused) gl.drawArrays(gl.TRIANGLES, 0, 3)
+        return
+      }
+      
       animationFrameId = requestAnimationFrame(loop)
       gl.uniform1f(uniforms.iTime, time * 0.001)
 
@@ -377,6 +386,7 @@ function Lightfall({
     mouseStrength,
     mouseRadius,
     mouseDampening,
+    prefersReducedMotion,
   ])
 
   return (

@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { ROUTES } from '../../utils/constants'
 import AiraLogo from '../AiraLogo'
+import Button from '../Common/Button'
+import { useAuthContext } from '../../context/AuthContext'
 
 function LoginForm({ navigate }) {
+  const { login } = useAuthContext()
   const [values, setValues] = useState({
     email: '',
     password: '',
@@ -48,31 +51,17 @@ function LoginForm({ navigate }) {
     if (Object.keys(newErrors).length === 0) {
       setLoading(true)
       try {
-        // API call to login
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: values.email,
-            password: values.password,
-            rememberMe,
-          }),
-        })
-
-        const data = await response.json()
-
-        if (response.ok) {
-          // Store token
-          localStorage.setItem('token', data.token)
-          localStorage.setItem('user', JSON.stringify(data.user))
-
-          // Navigate to dashboard
-          navigate(ROUTES.DASHBOARD)
+        await login(values.email, values.password)
+        
+        // Navigate to dashboard
+        navigate(ROUTES.DASHBOARD)
+      } catch (err) {
+        console.error("Login Error:", err)
+        if (err.response && err.response.data && err.response.data.detail) {
+          setErrors({ submit: err.response.data.detail })
         } else {
-          setErrors({ submit: data.detail || 'Login failed' })
+          setErrors({ submit: 'Network error. Please try again.' })
         }
-      } catch {
-        setErrors({ submit: 'Network error. Please try again.' })
       } finally {
         setLoading(false)
       }
@@ -81,11 +70,10 @@ function LoginForm({ navigate }) {
 
   return (
     <div className="login-form-wrapper">
-      {/* Header */}
+      <div className="auth-form-logo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+        <AiraLogo style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 15px rgba(var(--primary-rgb), 0.5))' }} />
+      </div>
       <div className="login-header">
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <AiraLogo style={{ width: 50, height: 50, marginBottom: '1rem', filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.4))' }} />
-        </div>
         <h1 className="login-title">Sign In to ARIA</h1>
         <p className="login-subtitle">Welcome back. Your voice-first AI assistant awaits.</p>
       </div>
@@ -137,14 +125,15 @@ function LoginForm({ navigate }) {
               className={`form-input ${errors.password ? 'input-error' : ''}`}
               disabled={loading}
             />
-            <button
+            <Button
               type="button"
               className="password-toggle"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              disabled={loading}
+              variant="icon"
             >
               {showPassword ? '👁️' : '👁️‍🗨️'}
-            </button>
+            </Button>
             {errors.password && (
               <div className="error-message">
                 <span className="error-icon">⚠️</span>
@@ -175,23 +164,16 @@ function LoginForm({ navigate }) {
         )}
 
         {/* Sign In Button */}
-        <button
+        <Button
           type="submit"
           className="btn-signin"
-          disabled={loading}
+          loading={loading}
         >
-          {loading ? (
-            <>
-              <span className="spinner"></span>
-              Signing In...
-            </>
-          ) : (
             <>
               <span>🎤</span>
               Sign In
             </>
-          )}
-        </button>
+        </Button>
 
         {/* Divider */}
         <div className="form-divider">
@@ -199,27 +181,28 @@ function LoginForm({ navigate }) {
         </div>
 
         {/* Guest Button */}
-        <button
+        <Button
           type="button"
           className="btn-guest"
-          onClick={() => navigate(ROUTES.GUEST_ACCESS)}
+          variant="secondary"
+          onClick={() => navigate(ROUTES.GUEST)}
           disabled={loading}
         >
-          <span>👤</span>
-          Continue as Guest
-        </button>
+          <span>👤</span> Continue as Guest
+        </Button>
       </form>
 
       {/* Footer */}
       <div className="login-footer">
         <p className="footer-text">Don't have an account?</p>
-        <button
+        <Button
           type="button"
           className="btn-create-free"
+          variant="secondary"
           onClick={() => navigate(ROUTES.SIGNUP)}
         >
           Create one free
-        </button>
+        </Button>
       </div>
 
       <style>{`

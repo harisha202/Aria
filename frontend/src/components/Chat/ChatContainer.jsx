@@ -8,6 +8,7 @@ import VoiceService from '../../services/voice.service'
 import MessageList from './MessageList'
 import InputBar from './InputBar'
 import { ChatService } from '../../services/chat.service'
+import Toast from '../Common/Toast'
 
 const WS_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000')
   .replace(/^http/, 'ws')
@@ -20,7 +21,14 @@ function ChatContainer({ conversationId }) {
   const [selectedModel, setSelectedModel] = useState(
     import.meta.env.VITE_DEFAULT_AI_MODEL || 'claude',
   )
-  const [voiceReplies, setVoiceReplies] = useState(true)
+  const [voiceReplies, setVoiceReplies] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('aria-voice-settings') || '{}')
+      return saved.autoPlay ?? true
+    } catch {
+      return true
+    }
+  })
   const [selectedPersona, setSelectedPersona] = useState('default')
   const [error, setError] = useState('')
   const [streamingId, setStreamingId] = useState(null)   // id of the in-progress assistant bubble
@@ -167,22 +175,21 @@ function ChatContainer({ conversationId }) {
       } else {
         // REST fallback
         try {
+          const savedVoice = JSON.parse(localStorage.getItem('aria-voice-settings') || '{}')
           const response = await ChatService.sendMessage(conversationId, text, {
             model: selectedModel,
             persona: selectedPersona,
             voice: voiceReplies,
-            image: image
+            image: image,
+            voiceName: savedVoice.voice,
+            languageCode: savedVoice.language
           })
           if (voiceReplies && response.audio?.audio_base64) {
-            VoiceService.playAudio(response.audio.audio_base64, response.audio.content_type)
+            VoiceService.playAudio(response.audio.audio_base64, response.audio.content_type, savedVoice.rate)
           }
           if (response.ai_message) {
             setMessages((prev) => [...prev, response.ai_message])
           }
-          await updateConversation(conversationId, {
-            last_message: text,
-            message_count: (currentConversation?.message_count || 0) + 1,
-          })
         } catch (err) {
           setError(err.message || 'ARIA could not send that message.')
         }
@@ -289,7 +296,7 @@ function ChatContainer({ conversationId }) {
           />
           <span>Speak replies</span>
         </label>
-        <button type="button" className="icon-button export-btn" onClick={handleExport} title="Export Chat">
+        <button type="button" className="icon-button export-btn" onClick={handleExport} aria-label="Export Chat" title="Export Chat">
           ⬇️ Export
         </button>
       </div>
@@ -310,7 +317,7 @@ function ChatContainer({ conversationId }) {
         </div>
       )}
 
-      {error && <div className="chat-error" role="alert">{error}</div>}
+      {error && <Toast message={error} onClose={() => setError('')} type="error" />}
 
       {isTyping && (
         <div className="typing-indicator" aria-live="polite">

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 import './Iridescence.css'
 
 const vertexShader = `
@@ -81,6 +82,7 @@ export default function Iridescence({
   ...rest
 }) {
   const containerRef = useRef(null)
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     const container = containerRef.current
@@ -146,6 +148,12 @@ export default function Iridescence({
     if (mouseReact) container.addEventListener('mousemove', handleMouseMove)
 
     const update = (time) => {
+      if (prefersReducedMotion) {
+        gl.uniform1f(uniforms.uTime, 0)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        return
+      }
+
       animationFrameId = requestAnimationFrame(update)
       gl.uniform1f(uniforms.uTime, time * 0.001)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
@@ -162,7 +170,7 @@ export default function Iridescence({
       gl.getExtension('WEBGL_lose_context')?.loseContext()
       canvas.remove()
     }
-  }, [color, speed, amplitude, mouseReact])
+  }, [color, speed, amplitude, mouseReact, prefersReducedMotion])
 
   return <div ref={containerRef} className="iridescence-container" {...rest} />
 }

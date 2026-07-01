@@ -10,6 +10,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 
 import './PixelSnow.css'
 
@@ -168,6 +169,7 @@ function PixelSnow({
   const rendererRef = useRef(null)
   const materialRef = useRef(null)
   const resizeTimeoutRef = useRef(null)
+  const prefersReducedMotion = useReducedMotion()
 
   const variantValue = useMemo(() => {
     if (variant === 'round') return 1
@@ -259,6 +261,14 @@ function PixelSnow({
 
     const startTime = performance.now()
     const animate = () => {
+      if (prefersReducedMotion) {
+        if (isVisibleRef.current) {
+          material.uniforms.uTime.value = 0
+          renderer.render(scene, camera)
+        }
+        return
+      }
+
       animationRef.current = requestAnimationFrame(animate)
       if (isVisibleRef.current) {
         material.uniforms.uTime.value = (performance.now() - startTime) * 0.001
@@ -279,7 +289,7 @@ function PixelSnow({
       rendererRef.current = null
       materialRef.current = null
     }
-  }, [colorVector, depthFade, density, direction, farPlane, flakeSize, gamma, handleResize, minFlakeSize, pixelResolution, speed, brightness, variantValue])
+  }, [colorVector, depthFade, density, direction, farPlane, flakeSize, gamma, handleResize, minFlakeSize, pixelResolution, speed, brightness, variantValue, prefersReducedMotion])
 
   useEffect(() => {
     const material = materialRef.current

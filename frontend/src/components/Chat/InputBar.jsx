@@ -58,6 +58,7 @@ function InputBar({
               setImagePreview(null)
               if (fileInputRef.current) fileInputRef.current.value = ''
             }}
+            aria-label="Remove image"
           >
             ×
           </button>
@@ -76,6 +77,7 @@ function InputBar({
           className="icon-button attachment-btn" 
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isListening}
+          aria-label="Attach Image"
           title="Attach Image"
         >
           📎
@@ -100,7 +102,7 @@ function InputBar({
         />
 
         {isStreaming ? (
-          <button type="button" className="icon-button stop-btn" onClick={onStopGeneration} title="Stop Generating">
+          <button type="button" className="icon-button stop-btn" onClick={onStopGeneration} aria-label="Stop Generating" title="Stop Generating">
             ⏹️
           </button>
         ) : (

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
+import { useReducedMotion } from '../hooks/useReducedMotion'
 
 function AiraLogo({ className = '', width = 400, height = 380, style = {} }) {
   const canvasRef = useRef(null)
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -11,7 +13,7 @@ function AiraLogo({ className = '', width = 400, height = 380, style = {} }) {
     const W = canvas.width
     const H = canvas.height
     let frameId
-    let t = 0
+    let t = prefersReducedMotion ? 150 : 0
 
     const roundRect = (x, y, rectWidth, rectHeight, radius) => {
       if (typeof context.roundRect === 'function') {
@@ -170,16 +172,18 @@ function AiraLogo({ className = '', width = 400, height = 380, style = {} }) {
         context.fill()
       }
 
-      t += 1
-      frameId = requestAnimationFrame(draw)
+      if (!prefersReducedMotion) {
+        t += 1
+        frameId = requestAnimationFrame(draw)
+      }
     }
 
     draw()
 
     return () => {
-      cancelAnimationFrame(frameId)
+      if (frameId) cancelAnimationFrame(frameId)
     }
-  }, [])
+  }, [prefersReducedMotion])
 
   return (
     <canvas
@@ -188,7 +192,7 @@ function AiraLogo({ className = '', width = 400, height = 380, style = {} }) {
       width={width}
       height={height}
       style={style}
-      aria-label="AIRA icon, silence on the left and voice on the right"
+      aria-label="ARIA icon, silence on the left and voice on the right"
       role="img"
     />
   )

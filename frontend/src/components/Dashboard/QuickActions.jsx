@@ -1,19 +1,19 @@
-import SettingsLogo from '../Settings/SettingsLogo'
+import React from 'react'
+import Button from '../Common/Button'
 
 function QuickActions({ onNewChat, onChat, onSettings }) {
   return (
-    <div className="quick-actions">
-      <button type="button" className="btn btn-primary" onClick={onNewChat}>
-        New Chat
-      </button>
-      <button type="button" className="btn btn-secondary" onClick={onChat}>
-        <SettingsLogo type="chat" size="sm" />
-        Open Chat
-      </button>
-      <button type="button" className="btn btn-secondary" onClick={onSettings}>
-        <SettingsLogo type="settings" size="sm" />
+    <div className="quick-actions-card">
+      <h3>Quick Actions</h3>
+      <Button variant="primary" onClick={onNewChat}>
+        New Conversation
+      </Button>
+      <Button variant="secondary" onClick={onChat}>
+        Continue Chat
+      </Button>
+      <Button variant="secondary" onClick={onSettings}>
         Settings
-      </button>
+      </Button>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import AiraLogo from '../components/AiraLogo'
 import PixelSnow from '../components/Backgrounds/PixelSnow'
 import Navbar from '../components/Common/Navbar'
@@ -10,8 +10,8 @@ import QuickActions from '../components/Dashboard/QuickActions'
 import { useAuthContext } from '../context/AuthContext'
 import { useChatContext } from '../context/ChatContext'
 import { ROUTES } from '../utils/constants'
-
-const chartDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+import { ChatService } from '../services/chat.service'
+import Button from '../components/Common/Button'
 
 function DashboardPage({ navigate }) {
   const { user } = useAuthContext()
@@ -36,14 +36,25 @@ function DashboardPage({ navigate }) {
     }
   }, [conversations])
 
-  const chartData = useMemo(
-    () =>
-      chartDays.map((name, index) => ({
-        name,
-        messages: Math.max(4, stats.totalMessages + index * 3),
-      })),
-    [stats.totalMessages],
-  )
+  const [chartData, setChartData] = useState([])
+  const [primaryColor, setPrimaryColor] = useState('#06B6D4')
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await ChatService.getWeeklyStats()
+        setChartData(stats)
+      } catch (err) {
+        console.error('Failed to fetch weekly stats', err)
+      }
+    }
+    fetchStats()
+    
+    // Read the primary color token
+    const rootStyle = getComputedStyle(document.documentElement)
+    const pc = rootStyle.getPropertyValue('--primary').trim()
+    if (pc) setPrimaryColor(pc)
+  }, [])
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type })
@@ -64,7 +75,7 @@ function DashboardPage({ navigate }) {
     <main className="app-shell snow-page">
       <div className="page-pixel-snow-bg">
         <PixelSnow
-          color="#06B6D4"
+          color={primaryColor}
           flakeSize={0.022}
           minFlakeSize={1.25}
           pixelResolution={230}
@@ -117,9 +128,9 @@ function DashboardPage({ navigate }) {
         <section className="panel">
           <div className="recent-chat-item">
             <h2>Recent Conversations</h2>
-            <button type="button" className="ghost-button" onClick={() => navigate(ROUTES.CHAT)}>
+            <Button variant="ghost" onClick={() => navigate(ROUTES.CHAT)}>
               View all
-            </button>
+            </Button>
           </div>
           {conversations.length > 0 ? (
             <RecentChats

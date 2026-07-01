@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 import './SoftAurora.css'
 
 function hexToVec3(hex) {
@@ -188,6 +189,7 @@ export default function SoftAurora({
   mouseInfluence = 0.25,
 }) {
   const containerRef = useRef(null)
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     const container = containerRef.current
@@ -285,6 +287,13 @@ export default function SoftAurora({
     }
 
     const update = (time) => {
+      if (prefersReducedMotion) {
+        gl.uniform1f(uniforms.uTime, 0)
+        gl.uniform2f(uniforms.uMouse, currentMouse[0], currentMouse[1])
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        return
+      }
+
       animationFrameId = requestAnimationFrame(update)
       gl.uniform1f(uniforms.uTime, time * 0.001)
 
@@ -326,6 +335,7 @@ export default function SoftAurora({
     colorSpeed,
     enableMouseInteraction,
     mouseInfluence,
+    prefersReducedMotion,
   ])
 
   return <div ref={containerRef} className="soft-aurora-container" />

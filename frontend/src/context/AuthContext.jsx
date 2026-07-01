@@ -6,8 +6,13 @@ export const AuthContext = createContext(null)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('aria-user')
-    return stored ? JSON.parse(stored) : null
+    try {
+      const stored = localStorage.getItem('aria-user')
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      localStorage.removeItem('aria-user')
+      return null
+    }
   })
   const [token, setToken] = useState(() => localStorage.getItem('aria-token') || '')
   const [isLoading, setIsLoading] = useState(false)
@@ -56,6 +61,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, [persistAuth])
 
+  const loginAsGuest = useCallback((guestData) => {
+    const guestUser = {
+      id: 'guest',
+      email: guestData.email,
+      name: guestData.name,
+      method: 'guest'
+    }
+    setUser(guestUser)
+    setToken('')
+    localStorage.setItem('aria-user', JSON.stringify(guestUser))
+    localStorage.removeItem('aria-token')
+  }, [])
+
   const logout = useCallback(() => {
     setUser(null)
     setToken('')
@@ -64,8 +82,8 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const value = useMemo(
-    () => ({ user, token, isAuthenticated, isLoading, login, signup, logout }),
-    [user, token, isAuthenticated, isLoading, login, signup, logout],
+    () => ({ user, token, isAuthenticated, isLoading, login, signup, loginAsGuest, logout }),
+    [user, token, isAuthenticated, isLoading, login, signup, loginAsGuest, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -18,3 +18,41 @@
     font-size: 15px;
   }
 }
+
+@media (max-width: 768px) {
+  .chat-sidebar {
+    width: 0 !important;
+    flex-basis: 0 !important;
+    border: none !important;
+    opacity: 0;
+    overflow: hidden;
+  }
+  .chat-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chat-toolbar > * {
+    flex: 1 1 calc(50% - 8px);
+  }
+  .chat-status {
+    flex: 1 1 100%;
+  }
+  .dashboard-grid,
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .role-cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .role-card {
+    width: 100%;
+    max-width: 400px;
+  }
+  .dashboard-info {
+    margin-top: 2rem;
+  }
+  .dashboard-info h2 {
+    font-size: 1.5rem;
+  }
+}

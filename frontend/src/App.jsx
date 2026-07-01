@@ -18,7 +18,7 @@ import './App.css'
 const getRoute = () => window.location.pathname
 
 function AppRoutes() {
-  const { user, isAuthenticated, logout } = useAuthContext()
+  const { user, isAuthenticated, loginAsGuest } = useAuthContext()
   const [route, setRoute] = useState(getRoute)
 
   useEffect(() => {
@@ -58,7 +58,7 @@ function AppRoutes() {
     )
   }
 
-  return <Welcome navigate={navigate} onGuest={() => logout()} />
+  return <Welcome navigate={navigate} />
 }
 
 function App() {

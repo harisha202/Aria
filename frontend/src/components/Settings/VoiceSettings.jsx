@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useEffect, useState } from 'react'
 import SettingsLogo from './SettingsLogo'
 
 const VOICE_OPTIONS = [
@@ -19,18 +19,17 @@ const loadSettings = () => {
   }
 }
 
-function VoiceSettings({ onSave }) {
+function VoiceSettings() {
   const saved = loadSettings()
   const [voice, setVoice] = useState(saved.voice || 'en-US-Neural2-F')
   const [rate, setRate] = useState(saved.rate ?? 1.0)
   const [autoPlay, setAutoPlay] = useState(saved.autoPlay ?? true)
   const [language, setLanguage] = useState(saved.language || 'en-US')
 
-  const handleSave = useCallback(() => {
+  useEffect(() => {
     const settings = { voice, rate, autoPlay, language }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
-    onSave?.()
-  }, [voice, rate, autoPlay, language, onSave])
+  }, [voice, rate, autoPlay, language])
 
   return (
     <section className="settings-form">
@@ -83,10 +82,6 @@ function VoiceSettings({ onSave }) {
           Auto-play AI voice replies
         </label>
       </fieldset>
-
-      <button type="button" className="btn btn-primary" onClick={handleSave}>
-        Save Voice Settings
-      </button>
     </section>
   )
 }

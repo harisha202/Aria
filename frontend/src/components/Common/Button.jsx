@@ -8,9 +8,13 @@ function Button({
   type = 'button',
   className = '',
 }) {
+  let btnClass = `btn btn-${variant}`
+  if (variant === 'ghost') btnClass = 'ghost-button'
+  if (variant === 'icon') btnClass = 'icon-button'
+
   return (
     <button
-      className={`btn btn-${variant} ${className}`.trim()}
+      className={`${btnClass} ${className}`.trim()}
       type={type}
       onClick={onClick}
       disabled={disabled || loading}

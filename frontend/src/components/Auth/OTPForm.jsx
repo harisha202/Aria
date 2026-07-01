@@ -4,6 +4,7 @@ import { useAuthContext } from '../../context/AuthContext'
 import AuthService from '../../services/auth.service'
 import { OTP_LENGTH, OTP_RESEND_TIME, ROUTES } from '../../utils/constants'
 import { validateOTP } from '../../utils/validators'
+import Button from '../Common/Button'
 
 function OTPForm({ email = 'email@example.com', navigate }) {
   const { user, login } = useAuthContext()
@@ -103,9 +104,7 @@ function OTPForm({ email = 'email@example.com', navigate }) {
   return (
     <div className="auth-form-wrapper">
       <div className="auth-form-logo" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-        <button className="auth-brand-button" type="button" onClick={() => navigate(ROUTES.LOGIN)} aria-label="Back to login" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <AiraLogo style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 15px rgba(139, 92, 246, 0.5))' }} />
-        </button>
+        <AiraLogo style={{ width: 72, height: 72, filter: 'drop-shadow(0 0 15px rgba(var(--primary-rgb), 0.5))' }} />
       </div>
       
       <div className="auth-header">
@@ -113,9 +112,9 @@ function OTPForm({ email = 'email@example.com', navigate }) {
         <h2>Verify your email</h2>
       </div>
       
-      <p className="otp-desc" style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '2rem' }}>
+      <p className="otp-desc" style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem' }}>
         We have sent a 6-digit code to<br />
-        <span className="otp-email" style={{ color: '#c084fc', fontWeight: 500 }}>{displayEmail}</span>
+        <span className="otp-email" style={{ color: 'var(--primary)', fontWeight: 500 }}>{displayEmail}</span>
       </p>
 
       <form className="auth-form" onSubmit={handleVerify}>
@@ -140,24 +139,26 @@ function OTPForm({ email = 'email@example.com', navigate }) {
 
           {error && <div className="otp-error-msg">{error}</div>}
 
-          <button 
-            className="otp-verify-btn" 
-            type="submit" 
+          <Button
+            type="submit"
+            variant="primary"
             disabled={digits.some((digit) => !digit) || loading}
+            loading={loading}
+            style={{ width: '100%', padding: '1rem', marginTop: '1.5rem', fontSize: '1rem' }}
           >
             {loading ? 'VERIFYING...' : 'VERIFY AND CREATE ACCOUNT'}
-          </button>
+          </Button>
 
           <div className="auth-links" style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-            <p className="resend-text" style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+            <p className="resend-text" style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
               {resending ? 'Sending...' : timer > 0 ? `Resend code in ${timer}s` : (
-                <button type="button" onClick={resend} style={{ background: 'none', border: 'none', color: '#c084fc', cursor: 'pointer', fontWeight: 600 }}>Resend code</button>
+                <Button variant="ghost" onClick={resend}>Resend code</Button>
               )}
             </p>
-            <p style={{ color: '#475569', fontSize: '0.8rem', marginBottom: '1rem' }}>Did not receive the code? Check spam or click resend.</p>
-            <button type="button" onClick={() => navigate(ROUTES.LOGIN)}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1rem' }}>Did not receive the code? Check spam or click resend.</p>
+            <Button variant="ghost" onClick={() => navigate(ROUTES.LOGIN)}>
               Already have an account? Log in
-            </button>
+            </Button>
           </div>
         </form>
       <style>{`
@@ -173,7 +174,7 @@ function OTPForm({ email = 'email@example.com', navigate }) {
           width: 45px;
           height: 55px;
           background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(139, 92, 246, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 8px;
           color: #fff;
           font-size: 1.5rem;
@@ -183,17 +184,17 @@ function OTPForm({ email = 'email@example.com', navigate }) {
 
         .otp-box:focus, .otp-box.filled {
           outline: none;
-          border-color: #c084fc;
-          box-shadow: 0 0 15px rgba(192, 132, 252, 0.4);
+          border-color: var(--primary);
+          box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.4);
         }
 
         .otp-box.error {
-          border-color: #ef4444;
+          border-color: var(--error);
           box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
         }
 
         .otp-error-msg {
-          color: #fca5a5;
+          color: var(--error);
           font-size: 0.85rem;
           margin-bottom: 1.5rem;
         }
@@ -201,9 +202,9 @@ function OTPForm({ email = 'email@example.com', navigate }) {
         .otp-verify-btn {
           width: 100%;
           padding: 1rem;
-          background: rgba(13, 148, 136, 0.1);
-          border: 1px solid rgba(20, 184, 166, 0.2);
-          color: #2dd4bf;
+          background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+          border: none;
+          color: #fff;
           border-radius: 8px;
           font-weight: 700;
           letter-spacing: 1.5px;
@@ -213,10 +214,8 @@ function OTPForm({ email = 'email@example.com', navigate }) {
         }
 
         .otp-verify-btn:hover:not(:disabled) {
-          background: rgba(13, 148, 136, 0.2);
-          border-color: rgba(20, 184, 166, 0.5);
-          box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
-          color: #5eead4;
+          filter: brightness(1.1);
+          box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
         }
         
         .otp-verify-btn:disabled {

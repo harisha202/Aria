@@ -1292,4 +1292,295 @@
   color: #38b6ff;
 }
 
+/* Welcome Page & Guest Flow Styles */
+.welcome-dashboard {
+  min-height: 100vh;
+  background: var(--dark-light);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1100px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.dashboard-info {
+  margin-top: 4rem;
+  text-align: center;
+  max-width: 800px;
+}
+
+.dashboard-info h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.dashboard-info p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.dashboard-logo {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 1.5rem;
+  filter: drop-shadow(0 0 30px rgba(var(--primary-rgb), 0.6));
+}
+
+.dashboard-title {
+  font-size: 6.5rem;
+  font-weight: 800;
+  letter-spacing: -3px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 0.8rem;
+}
+
+.dashboard-instruction {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.role-cards-container {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.role-card {
+  flex: 1;
+  min-width: 260px;
+  max-width: 300px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.role-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 16px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Unified Theme Colors for Cards (Primary/Secondary variations) */
+.role-signin {
+  border-color: rgba(var(--primary-rgb), 0.3);
+}
+.role-signin:hover {
+  transform: translateY(-5px);
+  border-color: rgba(var(--primary-rgb), 0.8);
+  box-shadow: 0 10px 40px -10px rgba(var(--primary-rgb), 0.3);
+}
+.role-signin .role-icon {
+  color: var(--primary);
+  text-shadow: 0 0 20px rgba(var(--primary-rgb), 0.5);
+}
+.role-signin .role-arrow { color: var(--primary); }
+
+.role-signup {
+  border-color: rgba(var(--secondary-rgb), 0.3);
+}
+.role-signup:hover {
+  transform: translateY(-5px);
+  border-color: rgba(var(--secondary-rgb), 0.8);
+  box-shadow: 0 10px 40px -10px rgba(var(--secondary-rgb), 0.3);
+}
+.role-signup .role-icon {
+  color: var(--secondary);
+  text-shadow: 0 0 20px rgba(var(--secondary-rgb), 0.5);
+}
+.role-signup .role-arrow { color: var(--secondary); }
+
+.role-guest {
+  border-color: rgba(var(--primary-rgb), 0.3);
+}
+.role-guest:hover {
+  transform: translateY(-5px);
+  border-color: rgba(var(--secondary-rgb), 0.8);
+  box-shadow: 0 10px 40px -10px rgba(var(--primary-rgb), 0.3);
+}
+.role-guest .role-icon {
+  color: var(--text-light);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+.role-guest .role-arrow { color: var(--text-light); }
+
+
+.role-icon {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  font-family: monospace;
+}
+
+.role-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 0.5rem;
+}
+
+.role-card p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+
+.role-arrow {
+  color: inherit;
+  font-size: 1.2rem;
+  font-weight: bold;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.role-card:hover .role-arrow {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+/* Guest Modal */
+.guest-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guest-modal {
+  background: var(--panel-strong);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.guest-modal-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.guest-modal-header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.form-group input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn-submit, .btn-back {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.btn-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn-back {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn-back:hover {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.message-error { background: rgba(239, 68, 68, 0.1); color: var(--error); border: 1px solid rgba(239, 68, 68, 0.2); }
+.message-success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+
 

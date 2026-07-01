@@ -176,7 +176,6 @@ function GuestAccessForm({ navigate }) {
           justify-content: center;
           padding: 2rem;
           background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
           overflow: hidden;
           isolation: isolate;
         }

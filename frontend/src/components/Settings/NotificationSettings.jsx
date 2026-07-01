@@ -26,22 +26,31 @@ function NotificationSettings({ onSave }) {
         <SettingsLogo type="notifications" size="lg" />
         <h1>Notifications</h1>
       </div>
-      <label>
-        <span>Browser notifications</span>
-        <input 
-          type="checkbox" 
-          checked={browser} 
-          onChange={(e) => setBrowser(e.target.checked)} 
-        />
-      </label>
-      <label>
-        <span>Email updates</span>
-        <input 
-          type="checkbox" 
-          checked={email} 
-          onChange={(e) => setEmail(e.target.checked)} 
-        />
-      </label>
+      <fieldset className="settings-fieldset">
+        <legend>Notification Preferences</legend>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', cursor: 'pointer' }}>
+          <input 
+            type="checkbox" 
+            id="browserNotifications"
+            name="browserNotifications"
+            checked={browser} 
+            onChange={(e) => setBrowser(e.target.checked)} 
+            style={{ width: '18px', height: '18px', accentColor: 'var(--primary-color)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: '15px', color: 'var(--text)' }}>Browser notifications</span>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+          <input 
+            type="checkbox" 
+            id="emailUpdates"
+            name="emailUpdates"
+            checked={email} 
+            onChange={(e) => setEmail(e.target.checked)} 
+            style={{ width: '18px', height: '18px', accentColor: 'var(--primary-color)', cursor: 'pointer' }}
+          />
+          <span style={{ fontSize: '15px', color: 'var(--text)' }}>Email updates</span>
+        </label>
+      </fieldset>
     </section>
   )
 }

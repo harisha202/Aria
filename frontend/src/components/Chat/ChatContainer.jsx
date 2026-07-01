@@ -33,11 +33,20 @@ function ChatContainer({ conversationId }) {
   const [error, setError] = useState('')
   const [streamingId, setStreamingId] = useState(null)   // id of the in-progress assistant bubble
   const [isTyping, setIsTyping] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const isStreaming = Boolean(streamingId)
 
   const userId = useMemo(() => {
     try { return JSON.parse(localStorage.getItem('aria-user') || '{}').id || 'guest' }
     catch { return 'guest' }
+  }, [])
+  
+  const userName = useMemo(() => {
+    try { 
+      const user = JSON.parse(localStorage.getItem('aria-user') || '{}')
+      return user.name ? user.name.split(' ')[0] : 'there'
+    }
+    catch { return 'there' }
   }, [])
 
   const wsUrl = conversationId
@@ -263,49 +272,12 @@ function ChatContainer({ conversationId }) {
   )
 
   return (
-    <section className="chat-surface" aria-label="Chat messages">
-      <div className="chat-toolbar" aria-label="Chat controls">
-        <div className="chat-status">
-          <span
-            className={`status-dot ${wsIsOpen ? 'status-dot--live' : 'status-dot--rest'}`}
-            aria-hidden="true"
-          />
-          <span>{wsIsOpen ? 'Live streaming' : 'Standard mode'}</span>
-        </div>
-        <label className="chat-control">
-          <span>Model</span>
-          <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-            <option value="claude">Claude</option>
-            <option value="gemini">Gemini</option>
-          </select>
-        </label>
-        <label className="chat-control">
-          <span>Persona</span>
-          <select value={selectedPersona} onChange={(e) => setSelectedPersona(e.target.value)}>
-            <option value="default">Default</option>
-            <option value="programmer">Programmer</option>
-            <option value="creative">Creative Writer</option>
-            <option value="sarcastic">Sarcastic Friend</option>
-          </select>
-        </label>
-        <label className="chat-toggle">
-          <input
-            type="checkbox"
-            checked={voiceReplies}
-            onChange={(e) => setVoiceReplies(e.target.checked)}
-          />
-          <span>Speak replies</span>
-        </label>
-        <button type="button" className="icon-button export-btn" onClick={handleExport} aria-label="Export Chat" title="Export Chat">
-          ⬇️ Export
-        </button>
-      </div>
-
+    <section className="chat-surface" aria-label="Chat messages" style={{ position: 'relative' }}>
       {messages.length === 0 && !isLoading && (
         <div className="chat-starters" aria-label="Useful starter prompts">
-          <div>
-            <p className="step-label">Start With A Real Task</p>
-            <h2>Ask ARIA to plan, write, explain, or summarize.</h2>
+          <div style={{ textAlign: 'center' }}>
+            <h1 className="step-label" style={{ fontSize: '2rem', marginBottom: '8px' }}>Hi {userName}, Start With A Real Task</h1>
+            <p style={{ fontSize: '1.15rem', color: 'var(--text)' }}>Ask ARIA to plan, write, explain, or summarize.</p>
           </div>
           <div className="starter-grid">
             {starterPrompts.map((prompt) => (
@@ -344,6 +316,56 @@ function ChatContainer({ conversationId }) {
         audioLevel={audioLevel}
         duration={duration}
         disabled={isLoading && !isStreaming}
+        settingsDropdown={
+          <div className="chat-settings-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <button 
+              type="button"
+              className="icon-button settings-btn" 
+              onClick={() => setShowSettings(!showSettings)}
+              aria-label="Chat Settings"
+              style={{ fontSize: '20px', padding: '6px 14px', background: 'var(--primary-color)', color: 'white', borderRadius: '8px', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)' }}
+            >
+              ⋮
+            </button>
+            {showSettings && (
+              <div className="chat-toolbar dropdown-menu" style={{ 
+                position: 'absolute', bottom: '100%', left: 0, marginBottom: '16px',
+                flexDirection: 'column', alignItems: 'flex-start', minWidth: '240px',
+                background: '#09090b', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '12px', padding: '20px', boxShadow: '0 -8px 32px rgba(0,0,0,0.8)',
+                zIndex: 11
+              }}>
+                <div className="chat-status" style={{ marginBottom: '16px', color: '#f3f4f6', fontWeight: 600 }}>
+                  <span className={`status-dot ${wsIsOpen ? 'status-dot--live' : 'status-dot--rest'}`} aria-hidden="true" />
+                  <span>{wsIsOpen ? 'Live streaming' : 'Standard mode'}</span>
+                </div>
+                <label className="chat-control" style={{ width: '100%', justifyContent: 'space-between', marginBottom: '14px', color: '#9ca3af', fontSize: '14px' }}>
+                  <span>Model</span>
+                  <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} style={{ padding: '6px 12px', background: '#18181b', color: '#ffffff', border: '1px solid #27272a', borderRadius: '6px', outline: 'none', cursor: 'pointer' }}>
+                    <option value="claude">Claude</option>
+                    <option value="gemini">Gemini</option>
+                  </select>
+                </label>
+                <label className="chat-control" style={{ width: '100%', justifyContent: 'space-between', marginBottom: '14px', color: '#9ca3af', fontSize: '14px' }}>
+                  <span>Persona</span>
+                  <select value={selectedPersona} onChange={(e) => setSelectedPersona(e.target.value)} style={{ padding: '6px 12px', background: '#18181b', color: '#ffffff', border: '1px solid #27272a', borderRadius: '6px', outline: 'none', cursor: 'pointer' }}>
+                    <option value="default">Default</option>
+                    <option value="programmer">Programmer</option>
+                    <option value="creative">Creative Writer</option>
+                    <option value="sarcastic">Sarcastic Friend</option>
+                  </select>
+                </label>
+                <label className="chat-toggle" style={{ width: '100%', marginBottom: '20px', color: '#9ca3af', fontSize: '14px' }}>
+                  <input type="checkbox" checked={voiceReplies} onChange={(e) => setVoiceReplies(e.target.checked)} style={{ accentColor: 'var(--primary-color)', width: '16px', height: '16px', cursor: 'pointer' }} />
+                  <span>Speak replies</span>
+                </label>
+                <button type="button" className="icon-button export-btn" onClick={handleExport} aria-label="Export Chat" style={{ width: '100%', justifyContent: 'flex-start', padding: '12px 0 0', borderTop: '1px solid #27272a', borderRadius: 0, color: '#d1d5db', fontSize: '14px', background: 'transparent' }}>
+                  ⬇️ Export Chat
+                </button>
+              </div>
+            )}
+          </div>
+        }
       />
     </section>
   )

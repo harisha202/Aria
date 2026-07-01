@@ -12,6 +12,7 @@ function InputBar({
   audioLevel = 0,
   duration = 0,
   disabled = false,
+  settingsDropdown = null,
 }) {
   const [value, setValue] = useState('')
   const [imagePreview, setImagePreview] = useState(null)
@@ -91,6 +92,7 @@ function InputBar({
         />
         <VoiceVisualizer isRecording={isListening} audioLevel={audioLevel} duration={duration} />
         
+        {settingsDropdown}
         <textarea
           className="chat-input"
           value={value}

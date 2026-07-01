@@ -120,7 +120,6 @@ function DashboardPage({ navigate }) {
             <QuickActions
               onNewChat={handleNewChat}
               onChat={() => navigate(ROUTES.CHAT)}
-              onSettings={() => navigate(ROUTES.SETTINGS)}
             />
           </div>
         </section>

@@ -874,7 +874,8 @@
   display: grid;
   gap: 14px;
   padding: 18px;
-  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
+  margin-top: auto;
+  border-top: 1px solid rgba(125, 211, 252, 0.12);
   background:
     radial-gradient(circle at 10% 0%, rgba(var(--primary-rgb), 0.12), transparent 36%),
     rgba(0, 0, 0, 0.12);
@@ -887,9 +888,10 @@
 }
 
 .starter-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
 }
 
 .starter-grid button,
@@ -1171,6 +1173,20 @@
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
+}
+
+.settings-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+}
+
+.settings-fieldset legend {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding: 0;
 }
 
 @media (max-width: 820px) {

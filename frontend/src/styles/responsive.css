@@ -27,6 +27,18 @@
     opacity: 0;
     overflow: hidden;
   }
+  .chat-sidebar.is-open {
+    width: 280px !important;
+    flex-basis: 280px !important;
+    opacity: 1;
+    border-right: 1px solid rgba(6, 182, 212, 0.2) !important;
+    overflow: visible;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    background-color: var(--dark-lighter, #0a1120);
+    height: 100vh;
+  }
   .chat-toolbar {
     flex-wrap: wrap;
     gap: 8px;

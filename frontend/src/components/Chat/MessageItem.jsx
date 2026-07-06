@@ -2,7 +2,9 @@ import { formatTime } from '../../utils/formatters'
 import VoiceService from '../../services/voice.service'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { getReactionEmoji } from '../../utils/reactions'
+import EmojiBadge from './EmojiBadge'
 
 function CodeBlock({ inline, className, children, ...props }) {
   const [copied, setCopied] = useState(false)
@@ -48,8 +50,18 @@ function MessageItem({ message, onRetry, onDelete }) {
     await navigator.clipboard?.writeText(text)
   }
 
+  const emoji = useMemo(() => {
+    if (role === 'assistant') {
+      return getReactionEmoji(text)
+    }
+    return null
+  }, [role, text])
+
   return (
-    <article className={`message-item ${role}`}>
+    <article className={`message-item ${role}`} style={{ position: 'relative' }}>
+      {role === 'assistant' && !message._streaming && (
+        <EmojiBadge emoji={emoji} />
+      )}
       <div className="message-meta">
         <strong>{role === 'user' ? 'You' : role === 'system' ? 'System' : 'ARIA'}</strong>
         <span>{formatTime(message.createdAt || message.created_at)}</span>

@@ -57,11 +57,7 @@ function LoginForm({ navigate }) {
         navigate(ROUTES.DASHBOARD)
       } catch (err) {
         console.error("Login Error:", err)
-        if (err.response && err.response.data && err.response.data.detail) {
-          setErrors({ submit: err.response.data.detail })
-        } else {
-          setErrors({ submit: 'Network error. Please try again.' })
-        }
+        setErrors({ submit: err.message || 'Network error. Please try again.' })
       } finally {
         setLoading(false)
       }

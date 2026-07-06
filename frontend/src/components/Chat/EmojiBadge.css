@@ -1,0 +1,46 @@
+.emoji-badge-container {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.emoji-badge {
+  background: var(--bg-2, #111827);
+  border: 1px solid var(--chassis-lo, #374151);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  user-select: none;
+  transition: transform 0.1s ease;
+}
+
+.emoji-badge:active {
+  transform: scale(0.9);
+}
+
+.burst-emoji {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 16px;
+  pointer-events: none;
+  animation: burstAnim 0.6s ease-out forwards;
+}
+
+@keyframes burstAnim {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--bx)), calc(-50% + var(--by))) scale(1.5) rotate(var(--br));
+    opacity: 0;
+  }
+}

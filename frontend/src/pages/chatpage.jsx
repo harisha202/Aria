@@ -34,7 +34,8 @@ function ChatPage({ navigate }) {
     if (!userId || userId === 'guest') return
 
     const WS_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/^http/, 'ws')
-    const ws = new WebSocket(`${WS_BASE}/ws/notifications/${userId}`)
+    const token = localStorage.getItem('aria-token') || ''
+    const ws = new WebSocket(`${WS_BASE}/ws/notifications/${userId}?token=${token}`)
 
     ws.onmessage = (event) => {
       try {

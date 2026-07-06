@@ -8,6 +8,7 @@ import VoiceService from '../../services/voice.service'
 import MessageList from './MessageList'
 import InputBar from './InputBar'
 import { ChatService } from '../../services/chat.service'
+import { WikipediaService } from '../../services/wikipedia.service'
 import Toast from '../Common/Toast'
 
 const WS_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000')
@@ -17,7 +18,7 @@ function ChatContainer({ conversationId }) {
   const { messages, setMessages, isLoading } = useChat({
     storageKey: `aira-chat-${conversationId}`,
   })
-  const { currentConversation, updateConversation } = useChatContext()
+  const { currentConversation } = useChatContext()
   const [selectedModel, setSelectedModel] = useState(
     import.meta.env.VITE_DEFAULT_AI_MODEL || 'claude',
   )
@@ -33,6 +34,7 @@ function ChatContainer({ conversationId }) {
   const [error, setError] = useState('')
   const [streamingId, setStreamingId] = useState(null)   // id of the in-progress assistant bubble
   const [isTyping, setIsTyping] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const isStreaming = Boolean(streamingId)
 
@@ -50,7 +52,7 @@ function ChatContainer({ conversationId }) {
   }, [])
 
   const wsUrl = conversationId
-    ? `${WS_BASE}/ws/${userId}/${conversationId}`
+    ? `${WS_BASE}/ws/${userId}/${conversationId}?token=${localStorage.getItem('aria-token') || ''}`
     : null
 
   // ── WebSocket streaming ────────────────────────────────────────────
@@ -162,6 +164,8 @@ function ChatContainer({ conversationId }) {
       
       if (!text && !image) return null
 
+      setIsGenerating(true)
+
       // Optimistic user bubble
       const userBubble = {
         id: `user-${Date.now()}`,
@@ -172,8 +176,35 @@ function ChatContainer({ conversationId }) {
       }
       setMessages((prev) => [...prev, userBubble])
 
+      if (text && text.toLowerCase().startsWith('/wiki ')) {
+        const query = text.slice(6).trim()
+        if (query) {
+          try {
+            const data = await WikipediaService.search(query)
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `wiki-${Date.now()}`,
+                role: 'assistant',
+                content: data.found 
+                  ? `### ${data.title}\n\n${data.extract}\n\n[Source](${data.url})`
+                  : `I couldn't find a Wikipedia article for "${query}".`,
+                ai_model: 'wikipedia',
+                createdAt: new Date().toISOString(),
+              }
+            ])
+          } catch (err) {
+            setError(err.message || 'Wikipedia lookup failed.')
+          } finally {
+            setIsGenerating(false)
+          }
+          return userBubble
+        }
+      }
+
       if (wsIsOpen) {
         // WebSocket path
+        setIsGenerating(false) // websocket events handle typing state
         wsSend({ 
           type: 'message', 
           text: text, 
@@ -201,6 +232,8 @@ function ChatContainer({ conversationId }) {
           }
         } catch (err) {
           setError(err.message || 'ARIA could not send that message.')
+        } finally {
+          setIsGenerating(false)
         }
       }
       return userBubble
@@ -214,7 +247,6 @@ function ChatContainer({ conversationId }) {
       conversationId,
       currentConversation,
       setMessages,
-      updateConversation,
     ],
   )
 
@@ -291,18 +323,9 @@ function ChatContainer({ conversationId }) {
 
       {error && <Toast message={error} onClose={() => setError('')} type="error" />}
 
-      {isTyping && (
-        <div className="typing-indicator" aria-live="polite">
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="sr-only">ARIA is typing…</span>
-        </div>
-      )}
-
       <MessageList
         messages={messages}
-        isLoading={isLoading && !streamingId}
+        isLoading={(isLoading || isGenerating || isTyping) && !streamingId}
         onRetry={handleRetry}
         onDelete={handleDelete}
       />

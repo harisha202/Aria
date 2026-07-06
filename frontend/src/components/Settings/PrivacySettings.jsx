@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import SettingsLogo from './SettingsLogo'
 
 const STORAGE_KEY = 'aria-privacy-settings'
@@ -16,8 +16,16 @@ function PrivacySettings({ onSave }) {
   const [privacyMode, setPrivacyMode] = useState(saved.privacyMode ?? false)
   const [autoSave, setAutoSave] = useState(saved.autoSave ?? true)
 
+  const isInitialMount = useRef(true)
+
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ privacyMode, autoSave }))
+    onSave?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [privacyMode, autoSave])
 
   return (

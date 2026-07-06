@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import SettingsLogo from './SettingsLogo'
 
 const STORAGE_KEY = 'aria-notification-settings'
@@ -16,8 +16,16 @@ function NotificationSettings({ onSave }) {
   const [browser, setBrowser] = useState(saved.browser ?? true)
   const [email, setEmail] = useState(saved.email ?? false)
 
+  const isInitialMount = useRef(true)
+
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ browser, email }))
+    onSave?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [browser, email])
 
   return (

@@ -30,7 +30,8 @@ function WelcomePageComprehensive({ navigate }) {
 
         <div className="role-cards-container">
           {/* Sign In Card */}
-          <div 
+          <button 
+            type="button"
             className="role-card role-signin"
             onClick={() => navigate(ROUTES.LOGIN)}
           >
@@ -38,10 +39,11 @@ function WelcomePageComprehensive({ navigate }) {
             <h3>Sign In</h3>
             <p>Access your existing account</p>
             <div className="role-arrow">&gt;</div>
-          </div>
+          </button>
 
           {/* Create Account Card */}
-          <div 
+          <button 
+            type="button"
             className="role-card role-signup"
             onClick={() => navigate(ROUTES.SIGNUP)}
           >
@@ -49,10 +51,11 @@ function WelcomePageComprehensive({ navigate }) {
             <h3>Create Account</h3>
             <p>Register a new ARIA profile</p>
             <div className="role-arrow">&gt;</div>
-          </div>
+          </button>
 
           {/* Guest Card */}
-          <div 
+          <button 
+            type="button"
             className="role-card role-guest"
             onClick={() => navigate(ROUTES.GUEST)}
           >
@@ -60,7 +63,7 @@ function WelcomePageComprehensive({ navigate }) {
             <h3>Try as Guest</h3>
             <p>Explore without an account</p>
             <div className="role-arrow">&gt;</div>
-          </div>
+          </button>
         </div>
 
         {/* Info Section */}

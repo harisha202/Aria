@@ -98,7 +98,7 @@ function InputBar({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={imagePreview ? "Add a message about this image..." : "Message ARIA..."}
+          placeholder={imagePreview ? "Add a message about this image..." : "Message ARIA, or type /wiki <topic>..."}
           rows={1}
           disabled={disabled || isListening}
         />

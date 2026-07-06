@@ -15,7 +15,7 @@ import Button from '../components/Common/Button'
 
 function DashboardPage({ navigate }) {
   const { user } = useAuthContext()
-  const { conversations, createConversation, selectConversation } = useChatContext()
+  const { conversations, createConversation, selectConversation, loadConversations } = useChatContext()
   const [toast, setToast] = useState(null)
 
   const stats = useMemo(() => {
@@ -54,7 +54,10 @@ function DashboardPage({ navigate }) {
     const rootStyle = getComputedStyle(document.documentElement)
     const pc = rootStyle.getPropertyValue('--primary').trim()
     if (pc) setPrimaryColor(pc)
-  }, [])
+    
+    // Ensure conversations are loaded so stats compute correctly
+    loadConversations().catch(() => {})
+  }, [loadConversations])
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type })

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import MessageItem from './MessageItem'
+import ThinkingRobot from './ThinkingRobot'
 
 function MessageList({ messages = [], isLoading = false, onRetry, onDelete }) {
   const endRef = useRef(null)
@@ -14,13 +15,9 @@ function MessageList({ messages = [], isLoading = false, onRetry, onDelete }) {
         <MessageItem key={message.id} message={message} onRetry={onRetry} onDelete={onDelete} />
       ))}
       {isLoading && (
-        <article className="message-item assistant">
-          <div className="message-meta">
-            <strong>ARIA</strong>
-            <span>Typing</span>
-          </div>
-          <p className="message-text">Thinking...</p>
-        </article>
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
+          <ThinkingRobot />
+        </div>
       )}
       <div ref={endRef} />
     </div>

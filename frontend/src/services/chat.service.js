@@ -24,7 +24,7 @@ export const ChatService = {
   },
 
   async getConversation(id) {
-    const data = await api.get(`/api/v1/chat/conversations/${id}`)
+    const data = await api.get(`/api/v1/chat/conversations/${id}?user_id=${encodeURIComponent(getUserId())}`)
     return data.conversation || null
   },
 
@@ -38,12 +38,12 @@ export const ChatService = {
   },
 
   async deleteConversation(id) {
-    await api.delete(`/api/v1/chat/conversations/${id}`)
+    await api.delete(`/api/v1/chat/conversations/${id}?user_id=${encodeURIComponent(getUserId())}`)
     return true
   },
 
   async getMessages(conversationId) {
-    const data = await api.get(`/api/v1/chat/conversations/${conversationId}/messages`)
+    const data = await api.get(`/api/v1/chat/conversations/${conversationId}/messages?user_id=${encodeURIComponent(getUserId())}`)
     return data.messages || []
   },
 
@@ -67,7 +67,7 @@ export const ChatService = {
   },
 
   async deleteMessage(messageId) {
-    await api.delete(`/api/v1/chat/messages/${messageId}`)
+    await api.delete(`/api/v1/chat/messages/${messageId}?user_id=${encodeURIComponent(getUserId())}`)
     return true
   },
 

@@ -14,8 +14,8 @@ export const ROUTES = {
 }
 
 export const COLORS = {
-  PRIMARY: '#6432ff',
-  SECONDARY: '#00c8ff',
+  PRIMARY: '#06B6D4',
+  SECONDARY: '#3B82F6',
   DARK: '#030d1a',
   TEXT: '#ffffff',
   ERROR: '#ef4444',

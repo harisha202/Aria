@@ -7,7 +7,6 @@ __pycache__/
 *.log
 .venv/
 backend/.venv/
-aria.db
-backend/aria.db
+*.db
 frontend/dist/
 frontend/node_modules/

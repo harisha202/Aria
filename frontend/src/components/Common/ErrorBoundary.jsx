@@ -26,8 +26,8 @@ class ErrorBoundary extends React.Component {
           fontFamily: 'system-ui, sans-serif',
           textAlign: 'center',
           padding: '2rem',
-          backgroundColor: 'var(--bg-primary, #ffffff)',
-          color: 'var(--text-primary, #111827)'
+          backgroundColor: 'var(--dark, #030d1a)',
+          color: 'var(--text, #ffffff)'
         }}>
           <h2 style={{ marginBottom: '1rem' }}>Something went wrong</h2>
           <p style={{ color: 'var(--text-secondary, #4B5563)', marginBottom: '2rem' }}>

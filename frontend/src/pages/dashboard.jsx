@@ -37,8 +37,14 @@ function DashboardPage({ navigate }) {
   }, [conversations])
 
   const [chartData, setChartData] = useState([])
-  const [primaryColor, setPrimaryColor] = useState('#06B6D4')
-
+  const [primaryColor] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const rootStyle = getComputedStyle(document.documentElement)
+      const pc = rootStyle.getPropertyValue('--primary').trim()
+      return pc || '#06B6D4'
+    }
+    return '#06B6D4'
+  })
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -49,12 +55,7 @@ function DashboardPage({ navigate }) {
       }
     }
     fetchStats()
-    
-    // Read the primary color token
-    const rootStyle = getComputedStyle(document.documentElement)
-    const pc = rootStyle.getPropertyValue('--primary').trim()
-    if (pc) setPrimaryColor(pc)
-    
+
     // Ensure conversations are loaded so stats compute correctly
     loadConversations().catch(() => {})
   }, [loadConversations])

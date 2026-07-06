@@ -18,7 +18,6 @@ function ChatContainer({ conversationId }) {
   const { messages, setMessages, isLoading } = useChat({
     storageKey: `aira-chat-${conversationId}`,
   })
-  const { currentConversation } = useChatContext()
   const [selectedModel, setSelectedModel] = useState(
     import.meta.env.VITE_DEFAULT_AI_MODEL || 'claude',
   )
@@ -245,7 +244,6 @@ function ChatContainer({ conversationId }) {
       selectedPersona,
       voiceReplies,
       conversationId,
-      currentConversation,
       setMessages,
     ],
   )

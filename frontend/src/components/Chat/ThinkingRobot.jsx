@@ -1,47 +1,41 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import { useRef, useState } from 'react';
 import './ThinkingRobot.css';
 
 export default function ThinkingRobot() {
   const parallaxRef = useRef(null);
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!parallaxRef.current) return;
-      const nx = (e.clientX / window.innerWidth) * 2 - 1;
-      const ny = (e.clientY / window.innerHeight) * 2 - 1;
-      const rx = (ny * -10).toFixed(2);
-      const ry = (nx * 14).toFixed(2);
-      parallaxRef.current.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-    };
+  const handleMouseMove = (e) => {
+    if (!parallaxRef.current) return;
+    const rect = parallaxRef.current.parentElement.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const nx = Math.max(-1, Math.min(1, (e.clientX - centerX) / (rect.width / 2)));
+    const ny = Math.max(-1, Math.min(1, (e.clientY - centerY) / (rect.height / 2)));
+    const rx = (ny * -10).toFixed(2);
+    const ry = (nx * 14).toFixed(2);
+    parallaxRef.current.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  };
 
-    const handleTouchMove = (e) => {
-      if (!e.touches[0] || !parallaxRef.current) return;
-      const t = e.touches[0];
-      const nx = (t.clientX / window.innerWidth) * 2 - 1;
-      const ny = (t.clientY / window.innerHeight) * 2 - 1;
-      const rx = (ny * -10).toFixed(2);
-      const ry = (nx * 14).toFixed(2);
-      parallaxRef.current.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-    };
+  const handleTouchMove = (e) => {
+    if (!e.touches[0] || !parallaxRef.current) return;
+    const t = e.touches[0];
+    const rect = parallaxRef.current.parentElement.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const nx = Math.max(-1, Math.min(1, (t.clientX - centerX) / (rect.width / 2)));
+    const ny = Math.max(-1, Math.min(1, (t.clientY - centerY) / (rect.height / 2)));
+    const rx = (ny * -10).toFixed(2);
+    const ry = (nx * 14).toFixed(2);
+    parallaxRef.current.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  };
 
-    const handleMouseLeave = () => {
-      if (parallaxRef.current) {
-        parallaxRef.current.style.transform = 'rotateX(0deg) rotateY(0deg)';
-      }
-    };
+  const handleMouseLeave = () => {
+    if (parallaxRef.current) {
+      parallaxRef.current.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    }
+  };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
-
-  const particles = useMemo(() => {
+  const [particles] = useState(() => {
     const MOTES = 12; // Scaled down for smaller UI
     const arr = [];
     for (let i = 0; i < MOTES; i++) {
@@ -52,10 +46,16 @@ export default function ThinkingRobot() {
       arr.push({ id: i, left, dur, delay, drift });
     }
     return arr;
-  }, []);
+  });
 
   return (
-    <div className="robotStage" aria-label="Thinking...">
+    <div 
+      className="robotStage" 
+      aria-label="Thinking..."
+      onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="parallax" ref={parallaxRef}>
         <div className="idle">
           <div className="robot">

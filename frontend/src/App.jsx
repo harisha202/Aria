@@ -18,7 +18,7 @@ import './App.css'
 const getRoute = () => window.location.pathname
 
 function AppRoutes() {
-  const { user, isAuthenticated, loginAsGuest } = useAuthContext()
+  const { user, isAuthenticated } = useAuthContext()
   const [route, setRoute] = useState(getRoute)
 
   useEffect(() => {

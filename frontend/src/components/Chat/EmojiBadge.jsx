@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import './EmojiBadge.css';
 
 export default function EmojiBadge({ emoji }) {
@@ -25,7 +25,7 @@ export default function EmojiBadge({ emoji }) {
   }, []);
 
   return (
-    <div className="emoji-badge-container" onClick={handleClick}>
+    <button type="button" className="emoji-badge-container" onClick={handleClick}>
       <div className="emoji-badge" title="Reaction">
         {emoji}
       </div>
@@ -42,6 +42,6 @@ export default function EmojiBadge({ emoji }) {
           {emoji}
         </div>
       ))}
-    </div>
+    </button>
   );
 }

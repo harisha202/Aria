@@ -1,4 +1,3 @@
-import React from 'react'
 import AiraLogo from '../components/AiraLogo'
 import SoftAurora from '../components/Backgrounds/SoftAurora'
 import { APP_NAME, ROUTES } from '../utils/constants'

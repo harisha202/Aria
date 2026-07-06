@@ -44,13 +44,7 @@ async def chat_stream(payload: AIChatRequest):
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
-@router.post("/set-ai-model")
-@router.post("/set-model")
-async def set_ai_model(payload: dict):
-    model = payload.get("model")
-    if model:
-        ai_service.default_model = model
-    return {"default_model": ai_service.default_model}
+
 
 
 @router.get("/models")

@@ -72,7 +72,7 @@ def resolve_chat_user_id(requested_user_id: str = None, user=None) -> str:
     )
 
 
-def require_conversation_access(conversation: dict, user=None):
+def require_conversation_access(conversation: dict, user=None, requested_user_id: str = None):
     if not conversation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -81,7 +81,12 @@ def require_conversation_access(conversation: dict, user=None):
 
     owner_id = conversation["user_id"]
     if is_guest_user_id(owner_id):
-        return conversation
+        if requested_user_id and requested_user_id == owner_id:
+            return conversation
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Conversation access denied",
+        )
     if user and owner_id == user["id"]:
         return conversation
     raise HTTPException(

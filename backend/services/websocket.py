@@ -19,6 +19,8 @@ class ConnectionManager:
     def __init__(self):
         # {conversation_id: {user_id: WebSocket}}
         self._connections: dict[str, dict[str, WebSocket]] = {}
+        # {user_id: set(WebSocket)}
+        self._notification_connections: dict[str, set[WebSocket]] = {}
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -37,6 +39,24 @@ class ConnectionManager:
         if not conv:
             self._connections.pop(conversation_id, None)
         logger.info("WS disconnected — user=%s conv=%s", user_id, conversation_id)
+
+    # ------------------------------------------------------------------
+    # Notification Lifecycle
+    # ------------------------------------------------------------------
+    
+    async def connect_notification(self, websocket: WebSocket, user_id: str) -> None:
+        await websocket.accept()
+        if user_id not in self._notification_connections:
+            self._notification_connections[user_id] = set()
+        self._notification_connections[user_id].add(websocket)
+        logger.info("WS Notification connected — user=%s", user_id)
+
+    def disconnect_notification(self, websocket: WebSocket, user_id: str) -> None:
+        if user_id in self._notification_connections:
+            self._notification_connections[user_id].discard(websocket)
+            if not self._notification_connections[user_id]:
+                del self._notification_connections[user_id]
+        logger.info("WS Notification disconnected — user=%s", user_id)
 
     # ------------------------------------------------------------------
     # Sending helpers
@@ -85,6 +105,20 @@ class ConnectionManager:
             conversation_id,
             user_id,
         )
+
+    async def send_notification(self, user_id: str, payload: dict) -> None:
+        """Broadcast a notification to all active sockets for a specific user."""
+        sockets = self._notification_connections.get(user_id, set())
+        dead_sockets = set()
+        for ws in sockets:
+            try:
+                await ws.send_json({"type": "notification", **payload})
+            except Exception as exc:
+                logger.warning("WS notification send failed for user=%s: %s", user_id, exc)
+                dead_sockets.add(ws)
+        
+        for ws in dead_sockets:
+            self.disconnect_notification(ws, user_id)
 
     # ------------------------------------------------------------------
     # Introspection

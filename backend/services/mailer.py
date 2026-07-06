@@ -3,6 +3,7 @@ import smtplib
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
 from html import escape
 
 import config
@@ -15,11 +16,16 @@ def current_year() -> int:
     return datetime.now().year
 
 
-def aria_logo() -> str:
-    return """
-<div style="display:inline-block; width:44px; height:44px; border-radius:10px; background:#071426; border:1px solid #245d82; box-shadow:0 0 15px rgba(56,182,255,0.4); margin-bottom:12px;">
-    <div style="height:44px; line-height:44px; text-align:center; font-size:20px; font-weight:800; color:#38b6ff; font-family:-apple-system,BlinkMacSystemFont,sans-serif;">A</div>
-</div>
+def aria_logo(app_url: str) -> str:
+    # Bulletproof text logo that renders perfectly in every email client on earth
+    return f"""
+<table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:15px;">
+    <tr>
+        <td style="background-color:#ffffff; padding:6px 14px; border-radius:8px;">
+            <div style="font-size:24px; font-weight:900; color:#7c3aed; font-family:Arial, sans-serif; letter-spacing:1px; margin:0;">ARIA</div>
+        </td>
+    </tr>
+</table>
 """
 
 
@@ -28,7 +34,11 @@ def base_email(title: str, subtitle: str, theme_color: str, body: str, app_url: 
     Light-themed, card-based email template modeled after the reference designs.
     The header is a bold colored rounded rectangle, and the body sits on a soft off-white background.
     """
-    safe_app_url = escape(app_url.rstrip("/"))
+    # Prevent localhost links in emails as they trigger Google spam filters
+    if "localhost" in app_url or "127.0.0.1" in app_url:
+        safe_app_url = "https://aria-app.dev"
+    else:
+        safe_app_url = escape(app_url.rstrip("/"))
     year = current_year()
     return f"""
 <!DOCTYPE html>
@@ -47,7 +57,7 @@ def base_email(title: str, subtitle: str, theme_color: str, body: str, app_url: 
                     <!-- Colored Header Banner -->
                     <tr>
                         <td style="background:{theme_color}; padding:35px 40px; color:#ffffff; border-top-left-radius:12px; border-top-right-radius:12px;">
-                            {aria_logo()}
+                            {aria_logo(app_url)}
                             <div style="font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; opacity:0.9;">ARIA</div>
                             <div style="font-size:28px; font-weight:700; letter-spacing:0.5px;">{escape(title)}</div>
                             <div style="margin-top:8px; font-size:14px; opacity:0.9; line-height:1.5;">{escape(subtitle)}</div>
@@ -113,10 +123,23 @@ class MailService:
             return False
 
         try:
-            msg = MIMEText(html_content, "html", "utf-8")
+            msg = MIMEMultipart('alternative')
             msg["Subject"] = subject
             msg["From"] = self.from_email
             msg["To"] = to_email
+            msg["Date"] = formatdate(localtime=True)
+            msg["Message-ID"] = make_msgid()
+
+            # Create plain text fallback (strip simple HTML tags)
+            text_content = html_content.replace("<br>", "\n").replace("</div>", "\n").replace("</p>", "\n")
+            import re
+            text_content = re.sub(r'<[^>]+>', '', text_content)
+            
+            part1 = MIMEText(text_content, "plain", "utf-8")
+            part2 = MIMEText(html_content, "html", "utf-8")
+            
+            msg.attach(part1)
+            msg.attach(part2)
 
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()

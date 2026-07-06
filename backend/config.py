@@ -10,6 +10,7 @@ if load_dotenv:
     load_dotenv(Path(__file__).with_name(".env"))
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///aria.db")
+REDIS_URL = os.getenv("REDIS_URL", None)
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
 SECRET_KEY = os.getenv("SECRET_KEY", JWT_SECRET)
 ALGORITHM = os.getenv("ALGORITHM", "HS256")

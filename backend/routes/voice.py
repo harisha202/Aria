@@ -1,5 +1,6 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
+from typing import Optional
 
 from services.voice import voice_service
 from utils.voice_utils import is_supported_audio_type
@@ -30,7 +31,7 @@ async def transcribe_audio(
 class SpeakRequest(BaseModel):
     text: str = Field(..., min_length=1)
     language_code: str = "en-US"
-    voice_name: str = None
+    voice_name: Optional[str] = None
 
 
 @router.post("/synthesize")

@@ -1,14 +1,18 @@
-"""
-ARIA in-memory sliding-window rate limiter.
-No external dependencies — stores state in process memory.
-"""
-
 import threading
 import time
 from collections import defaultdict
+import config
 
 from fastapi import HTTPException, Request, status
 
+try:
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
+
+redis_client = None
+if redis and getattr(config, "REDIS_URL", None):
+    redis_client = redis.from_url(config.REDIS_URL, decode_responses=True)
 
 class _SlidingWindow:
     """Thread-safe per-key request counter over a rolling time window."""
@@ -33,6 +37,23 @@ class _SlidingWindow:
 
 _window = _SlidingWindow()
 
+async def is_allowed_redis(key: str, limit: int, window_seconds: int) -> bool:
+    if not redis_client:
+        return False
+    now = time.time()
+    cutoff = now - window_seconds
+    async with redis_client.pipeline(transaction=True) as pipe:
+        # zremrangebyscore to remove old requests
+        await pipe.zremrangebyscore(key, 0, cutoff)
+        # zcard to get count
+        await pipe.zcard(key)
+        # zadd to add new request
+        await pipe.zadd(key, {str(now): now})
+        # expire to clean up whole key eventually
+        await pipe.expire(key, window_seconds)
+        results = await pipe.execute()
+        count = results[1]
+        return count < limit
 
 def rate_limit(limit: int, window_seconds: int, key_fn=None):
     """
@@ -62,8 +83,19 @@ def rate_limit(limit: int, window_seconds: int, key_fn=None):
         return f"{request.url.path}:{ip}"
 
     async def _dependency(request: Request):
+        if getattr(config, "DEBUG", False):
+            return
+
         key = _get_key(request)
-        if not _window.is_allowed(key, limit, window_seconds):
+        
+        allowed = True
+        if redis_client:
+            redis_key = f"rate_limit:{key}"
+            allowed = await is_allowed_redis(redis_key, limit, window_seconds)
+        else:
+            allowed = _window.is_allowed(key, limit, window_seconds)
+
+        if not allowed:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Too many requests. Allowed {limit} per {window_seconds}s.",

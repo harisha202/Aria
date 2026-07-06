@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 import config
 from utils.voice_utils import empty_wav_bytes, encode_audio
@@ -15,7 +16,7 @@ class TextToSpeechService:
         self,
         text: str,
         language_code: str = "en-US",
-        voice_name: str = None,
+        voice_name: Optional[str] = None,
     ) -> dict:
         if not text:
             return {

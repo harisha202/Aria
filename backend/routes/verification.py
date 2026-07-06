@@ -7,7 +7,7 @@ from services.email_verification import email_verification_service
 from services.feedback import feedback_service
 from services.otp_verification import otp_verification_service
 
-router = APIRouter(prefix="/api/verification", tags=["verification"])
+router = APIRouter(prefix="/api/v1/verification", tags=["verification"])
 
 
 class VerificationEmailRequest(BaseModel):

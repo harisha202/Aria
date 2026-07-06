@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 import config
 from database.db import init_db
-from routes import ai, auth, chat, feedback, user, verification, voice, websocket
+from routes import ai, auth, chat, feedback, user, verification, voice, websocket, wikipedia
 from utils.logger import get_logger
 
 logger = get_logger("aria.main")
@@ -32,6 +32,7 @@ app.include_router(feedback.router)
 app.include_router(verification.router)
 app.include_router(websocket.router)
 app.include_router(user.router)
+app.include_router(wikipedia.router)
 
 
 @app.exception_handler(Exception)

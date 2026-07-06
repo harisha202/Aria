@@ -1,6 +1,7 @@
 import uuid
 
 from database.db import execute, fetch_all, fetch_one, now_iso, placeholder
+from datetime import datetime, timedelta, timezone
 
 
 def _message_from_row(row):
@@ -37,6 +38,7 @@ def _conversation_from_row(row):
         "title": row["title"],
         "model": row.get("model") or "claude",
         "last_message_id": row.get("last_message_id"),
+        "message_count": row.get("message_count", 0),
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -73,10 +75,46 @@ class ChatService:
     def get_conversations(self, user_id: str):
         mark = placeholder()
         rows = fetch_all(
-            f"SELECT * FROM conversations WHERE user_id = {mark} ORDER BY updated_at DESC",
+            f"""
+            SELECT c.*, 
+                   (SELECT COUNT(m.id) FROM messages m WHERE m.conversation_id = c.id) as message_count
+            FROM conversations c 
+            WHERE c.user_id = {mark} 
+            ORDER BY c.updated_at DESC
+            """,
             (user_id,),
         )
         return [_conversation_from_row(row) for row in rows]
+
+    def get_weekly_stats(self, user_id: str):
+        mark = placeholder()
+        now = datetime.now(timezone.utc)
+        week_ago = now - timedelta(days=7)
+        
+        # Get all messages for the user in the last 7 days
+        rows = fetch_all(
+            f"SELECT created_at FROM messages WHERE user_id = {mark} AND created_at >= {mark}",
+            (user_id, week_ago.isoformat())
+        )
+        
+        # Group by day in python to avoid database dialect differences
+        days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        # Initialize counts for the last 7 days in order
+        stats_map = {}
+        for i in range(6, -1, -1):
+            d = now - timedelta(days=i)
+            stats_map[days[d.weekday()]] = 0
+            
+        for row in rows:
+            # Parse ISO 8601 string to datetime
+            dt = datetime.fromisoformat(row["created_at"].replace("Z", "+00:00"))
+            day_name = days[dt.weekday()]
+            if day_name in stats_map:
+                stats_map[day_name] += 1
+                
+        # Format for recharts
+        return [{"name": k, "messages": v} for k, v in stats_map.items()]
+
 
     def get_conversation(self, conversation_id: str):
         mark = placeholder()

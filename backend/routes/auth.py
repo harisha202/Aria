@@ -37,7 +37,6 @@ async def signup(payload: SignupRequest, request: Request, _=Depends(signup_limi
         result = auth.signup(payload.email, payload.password, payload.name)
         user = result["user"]
         otp_code = generate_otp(user["email"])
-        logger.info("=== DEV MODE: OTP for %s is %s ===", user["email"], otp_code)
         
         sent = await otp_verification_service.send_otp_email(
             user["email"],
@@ -77,6 +76,17 @@ async def verify_otp(payload: OTPRequest):
     auth.mark_email_verified(payload.email)
     user = auth.get_user_by_email(payload.email)
     logger.info("Email verified for %s", payload.email)
+    
+    if user:
+        name = user.get("name") or user["email"].split("@")[0]
+        await otp_verification_service.send_welcome_email(user["email"], name)
+        
+        try:
+            from services.websocket import manager
+            await manager.send_notification(user["id"], {"message": f"Welcome to ARIA! Your account is now active and verified."})
+        except Exception as e:
+            logger.error(f"Failed to push WS notification: {e}")
+        
     return {
         "verified": True,
         "email": payload.email,
@@ -96,7 +106,6 @@ async def resend_otp(payload: dict, request: Request, _=Depends(otp_resend_limit
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     otp_code = generate_otp(email)
-    logger.info("=== DEV MODE: Resent OTP for %s is %s ===", email, otp_code)
     
     sent = await otp_verification_service.send_otp_email(
         email,

@@ -20,14 +20,21 @@ def _sqlite_path():
     return str(BACKEND_DIR / sqlite_path)
 
 
+# Global connection pool for Postgres
+pg_pool = None
+
+
 def _connect():
+    global pg_pool
     if is_postgres():
-        try:
-            import psycopg
-            from psycopg.rows import dict_row
-        except ImportError as exc:
-            raise RuntimeError("Install psycopg[binary] to use PostgreSQL DATABASE_URL") from exc
-        return psycopg.connect(DATABASE_URL, row_factory=dict_row)
+        if pg_pool is None:
+            try:
+                import psycopg_pool
+                from psycopg.rows import dict_row
+            except ImportError as exc:
+                raise RuntimeError("Install psycopg[binary] and psycopg_pool to use PostgreSQL DATABASE_URL") from exc
+            pg_pool = psycopg_pool.ConnectionPool(DATABASE_URL, kwargs={"row_factory": dict_row})
+        return pg_pool.getconn()
 
     connection = sqlite3.connect(_sqlite_path())
     connection.row_factory = sqlite3.Row
@@ -52,7 +59,10 @@ def get_connection():
         connection.rollback()
         raise
     finally:
-        connection.close()
+        if is_postgres() and pg_pool:
+            pg_pool.putconn(connection)
+        else:
+            connection.close()
 
 
 def fetch_one(query, params=()):

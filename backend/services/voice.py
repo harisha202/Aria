@@ -1,3 +1,4 @@
+from typing import Optional
 from services.voice_engines import SpeechToTextService, TextToSpeechService
 
 
@@ -18,7 +19,7 @@ class VoiceService:
         self,
         text: str,
         language_code: str = "en-US",
-        voice_name: str = None,
+        voice_name: Optional[str] = None,
     ) -> dict:
         return await self.tts.synthesize(text, language_code, voice_name)
 

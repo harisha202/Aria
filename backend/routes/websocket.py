@@ -24,13 +24,40 @@ from services.ai import ai_service
 from services.chat import chat_service
 from services.websocket import manager
 from utils.logger import get_logger
+from middleware.auth import is_guest_user_id
+from utils.jwt import decode_token
 
 logger = get_logger(__name__)
 
 router = APIRouter(tags=["websocket"])
 
 
-async def _handle_session(websocket: WebSocket, conversation_id: str, user_id: str):
+async def _handle_session(websocket: WebSocket, conversation_id: str, user_id: str, token: str = None):
+    # Verify token
+    if not is_guest_user_id(user_id):
+        if not token:
+            await websocket.close(code=4401)
+            return
+        try:
+            payload = decode_token(token)
+            if payload.get("sub") != user_id:
+                raise ValueError("User mismatch")
+        except Exception as exc:
+            logger.error("WebSocket auth error: %s", exc)
+            await websocket.close(code=4401)
+            return
+        
+        # Verify ownership
+        if conversation_id:
+            try:
+                conv = chat_service.get_conversation(conversation_id)
+                if not conv or str(conv.get("user_id")) != user_id:
+                    await websocket.close(code=4403)
+                    return
+            except Exception:
+                await websocket.close(code=4403)
+                return
+
     await manager.connect(websocket, conversation_id, user_id)
     try:
         while True:
@@ -111,10 +138,38 @@ async def _handle_session(websocket: WebSocket, conversation_id: str, user_id: s
 
 
 @router.websocket("/ws/{user_id}/{conversation_id}")
-async def websocket_with_user(websocket: WebSocket, user_id: str, conversation_id: str):
-    await _handle_session(websocket, conversation_id, user_id)
+async def websocket_with_user(websocket: WebSocket, user_id: str, conversation_id: str, token: str = None):
+    await _handle_session(websocket, conversation_id, user_id, token)
 
 
 @router.websocket("/ws/chat/{conversation_id}")
-async def websocket_chat(websocket: WebSocket, conversation_id: str):
-    await _handle_session(websocket, conversation_id, "guest")
+async def websocket_chat(websocket: WebSocket, conversation_id: str, token: str = None):
+    await _handle_session(websocket, conversation_id, "guest", token)
+
+@router.websocket("/ws/notifications/{user_id}")
+async def websocket_notifications(websocket: WebSocket, user_id: str, token: str = None):
+    if not is_guest_user_id(user_id):
+        if not token:
+            await websocket.close(code=4401)
+            return
+        try:
+            payload = decode_token(token)
+            if payload.get("sub") != user_id:
+                await websocket.close(code=4401)
+                return
+        except Exception:
+            await websocket.close(code=4401)
+            return
+
+    await manager.connect_notification(websocket, user_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            if data.get("type") == "ping":
+                await websocket.send_json({"type": "pong"})
+    except WebSocketDisconnect:
+        pass
+    except Exception as exc:
+        logger.error("WebSocket Notification error — user=%s: %s", user_id, exc, exc_info=True)
+    finally:
+        manager.disconnect_notification(websocket, user_id)

@@ -16,7 +16,15 @@ The frontend is a React/Vite app. The backend is a FastAPI API that connects aut
 - AI responses use Claude/Gemini when keys are configured, otherwise the app uses a local fallback response.
 - TTS uses Google Cloud Text-to-Speech when configured, otherwise it returns a local fallback audio payload.
 - SQLite works by default. PostgreSQL is supported through `DATABASE_URL`.
-
+- WebSocket connections are authenticated: the frontend sends the JWT as a `?token=` query param, and the backend verifies the signature plus conversation ownership before allowing a connection (guest sessions still connect without a token).
+- Chat supports a `/wiki <topic>` command that looks up Wikipedia directly (no AI model call) and returns a sourced, plain-text extract capped at 9000 characters. No API key required.
+- Dashboard stats (Total Messages / Total Conversations) load correctly on first visit, not just after opening Chat.
+- Mobile: the chat sidebar toggle works correctly below 768px width.
+- Landing page navigation (Sign In / Create Account / Try as Guest) is keyboard and screen-reader accessible.
+- **Tone-Aware Emoji Reactions:** AI responses are dynamically analyzed for sentiment, automatically triggering interactive emoji badges that display a custom particle-burst animation when clicked.
+- **3D Parallax "Thinking" Robot:** A custom CSS-only 3D robot animation provides visual feedback while the AI is generating a response, featuring a bounding-box scoped parallax effect that tracks mouse hover.
+- **Global Error Boundaries:** Comprehensive fallback screens capture React crashes and maintain the application's dark-mode aesthetic to ensure a seamless UX even during errors.
+- **Guest Mode Architecture:** Secure, isolated chat sessions allow unregistered users to experience the AI without polluting the core user database.
 ## System Architecture
 
 ```text
@@ -100,6 +108,7 @@ External APIs
 |-- Google Gemini API
 |-- Google Cloud Speech-to-Text
 |-- Google Cloud Text-to-Speech
+|-- Wikipedia API (no key required)
 `-- SMTP email for OTP delivery
 ```
 
@@ -316,9 +325,20 @@ GET  /api/v1/voice/voices
 ### WebSocket
 
 ```text
-WS /ws/{user_id}/{conversation_id}
-WS /ws/chat/{conversation_id}
+WS /ws/{user_id}/{conversation_id}?token=<jwt>
+WS /ws/chat/{conversation_id}?token=<jwt>
+WS /ws/notifications/{user_id}?token=<jwt>
 ```
+
+`token` is required for authenticated users (validated against the JWT signature and, for `/ws/{user_id}/{conversation_id}`, checked against the conversation's owner). Guest sessions (`user_id` starting with `guest`) can connect without a token.
+
+### Wikipedia
+
+```text
+GET /api/v1/wikipedia/search?q={query}
+```
+
+No API key required. Returns the best-matching article's plain-text extract, capped at 9000 characters (cut at a sentence boundary), plus the canonical article URL. Rate-limited to 20 requests/minute per IP. In the chat UI, this is triggered by typing `/wiki <topic>` instead of a normal message.
 
 ### Verification And Mail
 
@@ -409,7 +429,8 @@ Aira/
 |   |   |-- user.py
 |   |   |-- verification.py
 |   |   |-- voice.py
-|   |   `-- websocket.py
+|   |   |-- websocket.py
+|   |   `-- wikipedia.py
 |   |-- services/
 |   |   |-- ai.py
 |   |   |-- auth.py
@@ -418,6 +439,7 @@ Aira/
 |   |   |-- otp_verification.py
 |   |   |-- voice.py
 |   |   |-- websocket.py
+|   |   |-- wikipedia.py
 |   |   |-- ai_providers/
 |   |   |   |-- claude_service.py
 |   |   |   `-- gemini_service.py
@@ -484,6 +506,9 @@ Aira/
 - `backend/services/otp_verification.py`: OTP and OTP warning email templates.
 - `backend/services/otp_store.py`: Local OTP generation, expiry, and verification state.
 - `backend/services/feedback.py`: Feedback notification and confirmation email templates.
+- `backend/services/wikipedia.py`: Wikipedia search + extract lookup, capped at 9000 characters, no API key required.
+- `backend/routes/wikipedia.py`: `GET /api/v1/wikipedia/search` endpoint, rate-limited.
+- `frontend/src/services/wikipedia.service.js`: Frontend client for the Wikipedia lookup endpoint.
 - `frontend/src/pages/chatpage.jsx`: Main chat page.
 - `frontend/src/components/Chat/ChatContainer.jsx`: Main connected chat experience.
 - `frontend/src/components/Chat/VoiceButton.jsx`: Recording control.
@@ -518,10 +543,11 @@ ARIA supports:
 - Voice input through speech-to-text.
 - Voice output through text-to-speech.
 - AI responses through Claude and Gemini provider services.
-- Real-time chat behavior through WebSocket routes.
+- Real-time chat behavior through authenticated WebSocket routes.
+- Wikipedia lookups via `/wiki <topic>` — sourced, plain-text answers capped at 9000 characters, no API key needed.
 - Persistent conversation history.
 - JWT and OTP-based authentication.
-- A responsive React interface with chat, voice, dashboard, and settings surfaces.
+- A responsive, keyboard-accessible React interface with chat, voice, dashboard, and settings surfaces.
 
 Core loop:
 

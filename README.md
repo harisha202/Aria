@@ -1,13 +1,14 @@
-# ARIA
+# 🎙️ ARIA — Advanced Real-time Interactive Assistant
 
-ARIA is a full-stack, voice-first AI assistant.
+> **Where Silence Finds Its Voice**
 
-Tagline: **Where Silence Finds Its Voice**
+ARIA is a production-ready, full-stack AI voice assistant that bridges the gap between traditional text-based LLMs and natural, real-time conversations. Built with React, FastAPI, WebSockets, and modern AI integrations, ARIA enables users to speak directly to the assistant, stream responses in real time, and experience a responsive, accessible, and visually engaging interface.
 
-The frontend is a React/Vite app. The backend is a FastAPI API that connects authentication, chat history, AI providers, speech-to-text, text-to-speech, WebSocket streaming, and database persistence.
+---
 
-## Current Status
+# 🌟 Why ARIA?
 
+<<<<<<< HEAD
 - Frontend and backend are connected through `VITE_API_URL=http://localhost:8000`.
 - Backend routes use `/api/v1/...`.
 - Chat messages are sent from React to FastAPI and stored in the database.
@@ -110,221 +111,183 @@ External APIs
 |-- Google Cloud Text-to-Speech
 |-- Wikipedia API (no key required)
 `-- SMTP email for OTP delivery
-```
+=======
+Unlike simple AI chat wrappers, ARIA is designed as an enterprise-grade application focused on performance, accessibility, and user experience.
 
-## Main User Journey
+### 🎤 Voice-First Experience
+- Speech-to-Text (STT) for voice input
+- Text-to-Speech (TTS) for AI responses
+- Completely hands-free interaction
 
-```text
-User speaks
-|
-v
-Frontend records audio with the Web Audio API
-|
-v
-VoiceVisualizer shows the live waveform
-|
-v
-Frontend sends audio blob as multipart/form-data
-POST /api/v1/voice/transcribe
-|
-v
-Backend calls the STT engine
-|
-v
-Transcript returns to the frontend
-|
-v
-Transcript is sent as a chat message
-POST /api/v1/chat/send-message
-|
-v
-Backend stores the user message
-|
-v
-Backend routes the prompt through services/ai.py
-|
-v
-Claude or Gemini generates the assistant response
-|
-v
-Backend stores the AI message
-|
-v
-Backend optionally synthesizes speech
-POST /api/v1/voice/speak or /api/v1/voice/synthesize
-|
-v
-Frontend renders text plus replayable audio controls
-```
+### ⚡ Real-Time AI Streaming
+- WebSocket-based token streaming
+- Instant AI responses without waiting for complete generation
+- Smooth conversational experience
 
-## Key Integration Points
+### 📚 Smart Knowledge Plugin
+- `/wiki <topic>` command fetches information directly from Wikipedia
+- No AI tokens consumed
+- No additional API costs
 
-### Frontend To Backend
+### 👤 Guest Mode
+- Instant access without registration
+- Temporary chat sessions
+- Database remains clean from anonymous usage
 
-- REST API: auth, conversations, messages, settings, AI, and voice actions.
-- Multipart forms: audio upload for speech-to-text.
-- Binary responses: generated audio for text-to-speech.
-- WebSocket: real-time chat updates, streaming responses, and typing-style events.
+### 😊 Emotion-Aware Interface
+- Sentiment-aware emoji animations
+- Interactive particle effects
+- 3D Thinking Robot with parallax animation
 
-### AI
+---
 
-- Claude is the primary reasoning model when `CLAUDE_API_KEY` is configured.
-- Gemini is available as an alternate or fallback model when `GEMINI_API_KEY` is configured.
-- `backend/services/ai.py` orchestrates provider selection and fallback behavior.
-- Provider implementations live in `backend/services/ai_providers/`.
+# 🚀 Features
 
-### Voice
+- Real-time WebSocket AI streaming
+- Speech-to-Text voice input
+- Text-to-Speech voice output
+- Tone-aware emoji reactions
+- Interactive Thinking Robot animation
+- JWT Authentication
+- Email OTP Verification
+- Guest Mode
+- Conversation History
+- Multi-model AI support (Claude & Gemini)
+- Wikipedia command support
+- Responsive modern UI
+- Dark mode interface
 
-- Browser recording and playback are handled by `frontend/src/services/voice.service.js`.
-- Speech-to-text is routed through `backend/services/voice_engines/stt_service.py`.
-- Text-to-speech is routed through `backend/services/voice_engines/tts_service.py`.
-- The UI displays live recording state and audio playback controls.
+---
 
-### State And Persistence
+# 🛠️ Tech Stack
 
-- Frontend state lives in React contexts: auth, chat, voice, and UI.
-- Backend persistence stores users, conversations, messages, and settings.
-- SQLite is the default local database.
-- PostgreSQL is supported for production-like deployments.
+## Frontend
 
-## Run The App
+- React 19
+- Vite
+- React Context API
+- Vanilla CSS
+- Web Audio API
+- Web Speech API
 
-### 1. Backend
+## Backend
 
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+- Python
+- FastAPI
+- WebSockets
+- SQLAlchemy
+- SQLite / PostgreSQL
+- JWT Authentication
+- bcrypt Password Hashing
 
-Backend health check:
+## AI Services
+
+- Anthropic Claude
+- Google Gemini
+- Wikipedia API
+- Google Cloud STT/TTS (Optional)
+
+---
+
+# 🏗️ Architecture
 
 ```text
-http://localhost:8000/health
+Frontend (React + Vite)
+│
+├── Authentication
+├── Chat Interface
+├── Voice Engine
+├── WebSocket Client
+├── Context Providers
+└── API Services
+        │
+        ▼
+Backend (FastAPI)
+│
+├── Authentication
+├── Chat API
+├── AI Service
+├── Voice Service
+├── WebSocket Server
+├── Database
+└── Models
+        │
+        ▼
+External Services
+│
+├── Claude API
+├── Gemini API
+├── Wikipedia API
+├── Google STT/TTS
+└── SMTP Server
+>>>>>>> e2dfc489df1b21cc17f1d707b2a6594c4f7f9238
 ```
 
-### 2. Frontend
+---
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend dev URL:
+# 🚶 User Flow
 
 ```text
-http://localhost:5173
+User Speaks
+      │
+      ▼
+Speech-to-Text
+      │
+      ▼
+Transcript Generated
+      │
+      ▼
+AI Processing
+      │
+      ▼
+WebSocket Streaming
+      │
+      ▼
+Frontend Displays Tokens
+      │
+      ▼
+Text-to-Speech Response
 ```
 
-## Environment Connection
+---
 
-### Backend
+# 📡 API Endpoints
 
-Create or edit `backend/.env`. A safe template is in `backend/.env.example`.
+## Authentication
 
-Important variables:
-
-```env
-DEBUG=True
-CORS_ORIGINS=http://localhost:5173
-
-DATABASE_URL=sqlite:///aria.db
-# DATABASE_URL=postgresql://aria_user:aria_password@localhost:5432/aria_db
-
-SECRET_KEY=change-this-secret-in-production
-JWT_SECRET=change-this-secret-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=43200
-
-CLAUDE_API_KEY=
-CLAUDE_MODEL=claude-3-5-sonnet-20241022
-
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.0-flash
-AI_DEFAULT_MODEL=claude
-
-GOOGLE_PROJECT_ID=
-GOOGLE_APPLICATION_CREDENTIALS=
-GOOGLE_CREDENTIALS_FILE=
-GOOGLE_CLOUD_STT_LANGUAGE=en-US
-GOOGLE_CLOUD_TTS_VOICE=en-US-Neural2-C
-
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-FROM_EMAIL=noreply@aria.app
-FEEDBACK_EMAIL=feedback@aria.app
-```
-
-### Frontend
-
-Frontend env lives in `frontend/.env.development`.
-
-```env
-VITE_API_URL=http://localhost:8000
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
-VITE_APP_NAME=ARIA
-VITE_APP_VERSION=1.0.0-dev
-VITE_DEFAULT_AI_MODEL=claude
-```
-
-## API Endpoints
-
-### Auth
-
-```text
+```http
 POST /api/v1/auth/signup
 POST /api/v1/auth/login
 POST /api/v1/auth/verify-otp
 POST /api/v1/auth/resend-otp
 ```
 
-`signup` creates a 6-digit OTP and sends it by email. `verify-otp` validates the code and marks the user email as verified.
+## Chat
 
-### Chat
-
-```text
-GET    /api/v1/chat/conversations?user_id=guest
-POST   /api/v1/chat/conversations
-GET    /api/v1/chat/conversations/{conversation_id}
-DELETE /api/v1/chat/conversations/{conversation_id}
-GET    /api/v1/chat/conversations/{conversation_id}/messages
-POST   /api/v1/chat/send-message
-POST   /api/v1/chat/messages
-POST   /api/v1/chat/conversations/{conversation_id}/clear
-DELETE /api/v1/chat/messages/{message_id}
+```http
+GET  /api/v1/chat/conversations
+POST /api/v1/chat/conversations
+GET  /api/v1/chat/messages
+POST /api/v1/chat/send-message
 ```
 
-### AI
+## AI
 
-```text
+```http
 POST /api/v1/ai/chat
-POST /api/v1/ai/chat-stream
-POST /api/v1/ai/chat/stream
-POST /api/v1/ai/set-ai-model
-POST /api/v1/ai/set-model
-GET  /api/v1/ai/models
 ```
 
-### Voice
+## Voice
 
-```text
+```http
 POST /api/v1/voice/transcribe
-POST /api/v1/voice/transcribe-stream
 POST /api/v1/voice/synthesize
-POST /api/v1/voice/speak
-POST /api/v1/voice/speak-stream
-GET  /api/v1/voice/voices
 ```
 
-### WebSocket
+## WebSocket
 
 ```text
+<<<<<<< HEAD
 WS /ws/{user_id}/{conversation_id}?token=<jwt>
 WS /ws/chat/{conversation_id}?token=<jwt>
 WS /ws/notifications/{user_id}?token=<jwt>
@@ -341,52 +304,48 @@ GET /api/v1/wikipedia/search?q={query}
 No API key required. Returns the best-matching article's plain-text extract, capped at 9000 characters (cut at a sentence boundary), plus the canonical article URL. Rate-limited to 20 requests/minute per IP. In the chat UI, this is triggered by typing `/wiki <topic>` instead of a normal message.
 
 ### Verification And Mail
-
-```text
-POST /api/verification/email
-POST /api/verification/email/confirmed
-POST /api/verification/otp
-POST /api/verification/otp/warning
-POST /api/verification/feedback
+=======
+WS /ws/{user_id}/{conversation_id}
 ```
 
-### Feedback
+---
+>>>>>>> e2dfc489df1b21cc17f1d707b2a6594c4f7f9238
 
-```text
-POST   /api/v1/feedback/submit
-GET    /api/v1/feedback/
-GET    /api/v1/feedback/stats/summary
-GET    /api/v1/feedback/user/{email}
-GET    /api/v1/feedback/{feedback_id}
-PATCH  /api/v1/feedback/{feedback_id}/read
-POST   /api/v1/feedback/{feedback_id}/note
-DELETE /api/v1/feedback/{feedback_id}
-```
+# 🔒 Security
 
-## Database
+- JWT Authentication
+- bcrypt password hashing
+- Protected API routes
+- OTP email verification
+- Guest session isolation
+- Secure WebSocket communication
 
-Default local mode:
+---
 
-```env
-DATABASE_URL=sqlite:///aria.db
-```
+# 📌 Future Improvements
 
-PostgreSQL mode:
+- Voice cloning
+- Multiple AI personalities
+- File upload support
+- Image generation
+- Multilingual conversations
+- Docker deployment
+- Kubernetes support
+- Redis caching
 
-```env
-DATABASE_URL=postgresql://aria_user:aria_password@localhost:5432/aria_db
-```
+---
 
-The backend initializes required tables at startup in `backend/database/db.py`. SQL migration files are also kept in `database/migrations/`.
+# 👨‍💻 Developer
 
-Main tables:
+**Harish A**
 
-- `users`
-- `conversations`
-- `messages`
-- `user_settings`
-- `feedback`
+Full Stack Developer | MERN | FastAPI | AI Applications
 
+---
+
+## ⭐ Support
+
+<<<<<<< HEAD
 Useful PostgreSQL checks:
 
 ```sql
@@ -554,3 +513,6 @@ Core loop:
 ```text
 Speak -> Transcribe -> Send to AI -> Stream response -> Synthesize voice -> Save history
 ```
+=======
+If you found this project useful, consider giving it a ⭐ on GitHub.
+>>>>>>> e2dfc489df1b21cc17f1d707b2a6594c4f7f9238

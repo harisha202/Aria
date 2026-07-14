@@ -90,11 +90,11 @@ function Ballpit({
     const ambient = new AmbientLight(0xffffff, 1.4)
     scene.add(ambient)
 
-    const cyanLight = new PointLight(0x06b6d4, 120, 40)
+    const cyanLight = new PointLight(0x06b6d4, 2.5, 40)
     cyanLight.position.set(-4, 3, 8)
     scene.add(cyanLight)
 
-    const pinkLight = new PointLight(0xff007a, 90, 35)
+    const pinkLight = new PointLight(0xff007a, 2.0, 35)
     pinkLight.position.set(5, -2, 6)
     scene.add(pinkLight)
 

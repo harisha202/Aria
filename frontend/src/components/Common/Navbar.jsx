@@ -5,12 +5,12 @@ import { ROUTES } from '../../utils/constants'
 function Navbar({ navigate, user, onLogout }) {
   return (
     <header className="app-navbar">
-      <button type="button" className="app-brand" onClick={() => navigate?.(ROUTES.DASHBOARD)}>
+      <div className="app-brand">
         <span className="brand-logo">
           <AiraLogo className="brand-logo-canvas" width={400} height={380} />
         </span>
         <span>ARIA</span>
-      </button>
+      </div>
 
       <div className="user-menu">
         <span className="avatar" aria-hidden="true">
